@@ -84,3 +84,30 @@ BROADCAST_INTERVAL_SEC = float(os.getenv("BROADCAST_INTERVAL_SEC", "2.0"))
 SERVER_HOST = os.getenv("HOST", "0.0.0.0")
 SERVER_PORT = int(os.getenv("PORT", "5000"))
 CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "*")
+
+# Copernicus Data Space Ecosystem Configuration
+COPERNICUS_CLIENT_ID = os.getenv("COPERNICUS_CLIENT_ID", "").strip()
+COPERNICUS_CLIENT_SECRET = os.getenv("COPERNICUS_CLIENT_SECRET", "").strip()
+COPERNICUS_TOKEN_URL = os.getenv(
+    "COPERNICUS_TOKEN_URL",
+    "https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token"
+).strip()
+
+# Sentinel Hub Catalog API Configuration
+SENTINEL_HUB_CATALOG_URL = os.getenv(
+    "SENTINEL_HUB_CATALOG_URL",
+    "https://sh.dataspace.copernicus.eu/catalog/v1/search"
+).strip()
+
+# Sentinel Hub Process API Configuration
+SENTINEL_HUB_PROCESS_URL = os.getenv(
+    "SENTINEL_HUB_PROCESS_URL",
+    "https://sh.dataspace.copernicus.eu/api/v1/process"
+).strip()
+
+# Default Sentinel-1 Demonstration Bounding Box: Malacca Strait / Singapore Corridor
+# Format: [min_lon, min_lat, max_lon, max_lat] in WGS84 coordinates
+DEFAULT_SENTINEL1_BBOX = [99.5, 1.0, 104.5, 6.0]
+
+
+

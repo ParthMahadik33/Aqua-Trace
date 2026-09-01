@@ -26,10 +26,20 @@ interface MapWrapperProps {
   filterState: CategoryFilterState;
   panTarget: { lat: number; lon: number; zoom?: number } | null;
   sectorBounds?: [[number, number], [number, number]];
+  sarBounds?: [[number, number], [number, number]] | null;
+  sarLabel?: string;
+  sarAcquisitionTime?: string;
+  onSelectSarFootprint?: () => void;
+  isSelectingAoi?: boolean;
+  selectedAoi?: [number, number, number, number] | null;
+  onAoiComplete?: (bbox: [number, number, number, number]) => void;
+  onCancelAoi?: () => void;
 }
 
 export const MapWrapper: React.FC<MapWrapperProps> = (props) => {
   return <DynamicAisMap {...props} />;
 };
+
+
 
 export default MapWrapper;

@@ -7,6 +7,8 @@ import 'leaflet/dist/leaflet.css';
 import { Vessel, CategoryFilterState } from '@/types/vessel';
 import { CustomShipMarker } from './CustomShipMarker';
 import { VesselTrackLayer } from './VesselTrackLayer';
+import { SarFootprintLayer } from './SarFootprintLayer';
+import { AoiSelectionLayer } from './AoiSelectionLayer';
 
 // Fix standard Leaflet default icon issues in bundlers
 delete (L.Icon.Default.prototype as { _getIconUrl?: string })._getIconUrl;
@@ -23,7 +25,17 @@ interface AisMapProps {
   filterState: CategoryFilterState;
   panTarget: { lat: number; lon: number; zoom?: number } | null;
   sectorBounds?: [[number, number], [number, number]];
+  sarBounds?: [[number, number], [number, number]] | null;
+  sarLabel?: string;
+  sarAcquisitionTime?: string;
+  onSelectSarFootprint?: () => void;
+  isSelectingAoi?: boolean;
+  selectedAoi?: [number, number, number, number] | null;
+  onAoiComplete?: (bbox: [number, number, number, number]) => void;
+  onCancelAoi?: () => void;
 }
+
+
 
 // Map Controller for smooth flyTo and recentering
 function MapController({
@@ -68,6 +80,14 @@ export const AisMap: React.FC<AisMapProps> = ({
   filterState,
   panTarget,
   sectorBounds = DEFAULT_SECTOR_BOUNDS,
+  sarBounds,
+  sarLabel,
+  sarAcquisitionTime,
+  onSelectSarFootprint,
+  isSelectingAoi = false,
+  selectedAoi = null,
+  onAoiComplete,
+  onCancelAoi,
 }) => {
   // Filter vessels based on category toggle
   const visibleVessels = vessels.filter((v) => {
@@ -93,7 +113,7 @@ export const AisMap: React.FC<AisMapProps> = ({
           attribution="&copy; Esri &mdash; Esri, DeLorme, NAVTEQ"
         />
 
-        {/* Tactical Active Sector Boundary Box */}
+        {/* Global Monitoring Region Boundary Box */}
         <Rectangle
           bounds={sectorBounds}
           pathOptions={{
@@ -104,6 +124,26 @@ export const AisMap: React.FC<AisMapProps> = ({
             fillColor: '#00F0FF',
           }}
         />
+
+        {/* Interactive Click-and-Drag AOI Selection Layer */}
+        <AoiSelectionLayer
+          isSelecting={isSelectingAoi}
+          selectedAoi={selectedAoi}
+          onAoiComplete={onAoiComplete || (() => {})}
+          onCancelSelection={onCancelAoi || (() => {})}
+        />
+
+        {/* Real Sentinel-1 SAR Acquisition Coverage Footprint Layer */}
+        {sarBounds && (
+          <SarFootprintLayer
+            bounds={sarBounds}
+            sectorLabel={sarLabel}
+            acquisitionTimeFormatted={sarAcquisitionTime}
+            onSelectFootprint={onSelectSarFootprint}
+          />
+        )}
+
+
 
         {/* Selected Vessel Historical & Projected Dead-Reckoning Track */}
         <VesselTrackLayer vessel={selectedVessel} />

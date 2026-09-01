@@ -13,7 +13,11 @@ import {
   Check,
   Globe2,
   Anchor,
+  Satellite,
+  Crop,
 } from 'lucide-react';
+
+
 import { Vessel, ConnectionStatus, SHIP_CATEGORY_COLORS } from '@/types/vessel';
 
 export interface SectorPresetOption {
@@ -70,6 +74,10 @@ interface HeaderBarProps {
   lastUpdateTime: Date | null;
   activePresetKey: string;
   onChangeSector: (presetKey: string) => void;
+  isSarPanelOpen?: boolean;
+  onToggleSarPanel?: () => void;
+  isSelectingAoi?: boolean;
+  onToggleSelectAoi?: () => void;
 }
 
 export const HeaderBar: React.FC<HeaderBarProps> = ({
@@ -80,7 +88,13 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   lastUpdateTime,
   activePresetKey = 'ALL_INDIA',
   onChangeSector,
+  isSarPanelOpen = false,
+  onToggleSarPanel,
+  isSelectingAoi = false,
+  onToggleSelectAoi,
 }) => {
+
+
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSectorDropdownOpen, setIsSectorDropdownOpen] = useState(false);
@@ -276,7 +290,42 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
       </div>
 
       {/* Right: Controls & Connection Status */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 md:gap-3">
+        {/* Interactive AOI Bounding Box Selector Button */}
+        {onToggleSelectAoi && (
+          <button
+            onClick={onToggleSelectAoi}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer border ${
+              isSelectingAoi
+                ? 'bg-amber-500/25 border-amber-400 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.4)] animate-pulse'
+                : 'bg-white/5 hover:bg-cyan-500/15 border-white/10 hover:border-cyan-500/40 text-zinc-300 hover:text-cyan-300'
+            }`}
+            title="Click and drag on map to select an Area of Interest (AOI) for Sentinel-1 SAR analysis"
+          >
+            <Crop className={`w-3.5 h-3.5 ${isSelectingAoi ? 'text-amber-400 animate-spin' : 'text-cyan-400'}`} />
+            <span className="hidden sm:inline">
+              {isSelectingAoi ? 'DRAWING AOI...' : 'SELECT AREA'}
+            </span>
+          </button>
+        )}
+
+        {/* Satellite Surveillance Panel Toggle Button */}
+        {onToggleSarPanel && (
+          <button
+            onClick={onToggleSarPanel}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer border ${
+              isSarPanelOpen
+                ? 'bg-cyan-500/20 border-cyan-400/60 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
+                : 'bg-white/5 hover:bg-white/10 border-white/10 text-zinc-300 hover:text-white'
+            }`}
+            title="Toggle Copernicus Sentinel-1 SAR Satellite Surveillance"
+          >
+            <Satellite className={`w-3.5 h-3.5 ${isSarPanelOpen ? 'text-cyan-300 animate-pulse' : 'text-cyan-400'}`} />
+            <span className="hidden sm:inline">SAR RECON</span>
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          </button>
+        )}
+
         {/* Recenter Map Button */}
         <button
           onClick={onRecenterSector}
@@ -286,6 +335,8 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           <Crosshair className="w-3.5 h-3.5 text-cyan-400" />
           <span className="hidden sm:inline">SECTOR VIEW</span>
         </button>
+
+
 
         {/* Live Status Indicator Pill */}
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0E1524] border border-white/10 font-mono text-xs">
