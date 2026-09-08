@@ -82,7 +82,9 @@ ENABLE_SAMPLE_SEEDS = os.getenv("ENABLE_SAMPLE_SEEDS", "false").lower() in ("tru
 # Application Settings
 BROADCAST_INTERVAL_SEC = float(os.getenv("BROADCAST_INTERVAL_SEC", "2.0"))
 SERVER_HOST = os.getenv("HOST", "0.0.0.0")
-SERVER_PORT = int(os.getenv("PORT", "5000"))
+# Default to 7860 on Hugging Face Spaces (SPACE_ID detected), 5000 locally
+default_port = "7860" if os.getenv("SPACE_ID") else "5000"
+SERVER_PORT = int(os.getenv("PORT", default_port))
 CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "*")
 
 # Copernicus Data Space Ecosystem Configuration

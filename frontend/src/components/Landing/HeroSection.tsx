@@ -26,8 +26,10 @@ export const HeroSection: React.FC = () => {
           className={`absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-1000 ${
             isVideoLoaded ? 'opacity-100' : 'opacity-0'
           }`}
-          src="/api/hero-bg"
-        />
+        >
+          <source src="/hero-bg.mp4" type="video/mp4" />
+          <source src="/api/hero-bg" type="video/mp4" />
+        </video>
       )}
 
       {/* Subtle Ocean Atmospheric Scanline & Grid (Very faint, technical identity) */}

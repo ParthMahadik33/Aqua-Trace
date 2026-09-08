@@ -42,6 +42,35 @@ sentinel_process_service = Sentinel1ProcessService(
 )
 
 
+@app.route("/", methods=["GET"])
+def root_status():
+    """Root health check endpoint for cloud platforms & Hugging Face Spaces."""
+    return jsonify({
+        "status": "online",
+        "service": "AquaTrace Maritime Intelligence Backend",
+        "ais_status": ais_service.connection_status,
+        "vessels_tracked": len(ais_service.get_all_ships()),
+        "endpoints": [
+            "/api/health",
+            "/api/ships",
+            "/api/ships/<mmsi>",
+            "/api/copernicus/test-auth",
+            "/api/copernicus/sentinel1/latest",
+            "/api/copernicus/sentinel1/image",
+            "/socket.io"
+        ]
+    }), 200
+
+
+@app.route("/api/health", methods=["GET"])
+def api_health():
+    """Standard health check endpoint."""
+    return jsonify({
+        "status": "healthy",
+        "service": "AquaTrace Backend",
+        "ais_connected": ais_service.connection_status == "CONNECTED"
+    }), 200
+
 
 @app.route("/api/copernicus/test-auth", methods=["GET"])
 def test_copernicus_auth():
