@@ -1,0 +1,73 @@
+{
+  "sample_id": "part1_oil_00004",
+  "dataset_part": "part1 (zenodo_part1)",
+  "class": "OIL",
+  "tiff_path": "D:\\AquaTraceData\\raw\\zenodo_part1\\Oil\\00004.tif",
+  "mask_path": "D:\\AquaTraceData\\raw\\zenodo_part1\\01_Train_Val_Oil_Spill_mask\\Mask_oil\\00004.tif",
+  "source_scene_product_id": "S1A_IW_GRDH_1SDV_20180803T172551_20180803T172608_023085_0281B1_DB30",
+  "acquisition_timestamp": "2018-08-03T17:25:51",
+  "platform": "Sentinel-1A",
+  "sensor_mode": "IW (Interferometric Wide Swath)",
+  "product_type": "GRDH (Ground Range Detected High Resolution)",
+  "polarizations": [
+    "VV",
+    "VH"
+  ],
+  "orbit_number": "023085",
+  "pass_direction": "Ascending",
+  "bands": {
+    "band_0": "VV (Calibrated Sigma0 in dB)",
+    "band_1": "VH (Calibrated Sigma0 in dB)"
+  },
+  "dimensions": {
+    "width": 2048,
+    "height": 2048,
+    "bands": 2,
+    "dtype": "float32",
+    "total_pixels": 4194304
+  },
+  "scene_geographic_bbox": {
+    "min_lon": 5.782596438751165,
+    "min_lat": 55.15969191759723,
+    "max_lon": 5.966571408938843,
+    "max_lat": 55.343666887784906,
+    "crs": "EPSG:4326 (WGS 84)"
+  },
+  "slick_annotation": {
+    "pixel_count": 44049,
+    "percentage_of_scene": 1.0502,
+    "image_bbox": {
+      "row_min": 566,
+      "row_max": 1573,
+      "col_min": 941,
+      "col_max": 1405,
+      "width": 465,
+      "height": 1008,
+      "center_row": 1106.184090444732,
+      "center_col": 1146.127063043429
+    },
+    "geographic_bbox": {
+      "min_lon": 5.867127906986812,
+      "min_lat": 55.20236189359291,
+      "max_lon": 5.908809736169958,
+      "max_lat": 55.29282224270374,
+      "center_lon": 5.885554784578658,
+      "center_lat": 55.24429668023527,
+      "crs": "EPSG:4326 (WGS 84)"
+    },
+    "contrast_verification": {
+      "vv_water_mean_db": -37.62,
+      "vv_oil_mean_db": -38.72,
+      "vv_damping_db": 1.1,
+      "vh_water_mean_db": -21.35,
+      "vh_oil_mean_db": -30.77,
+      "vh_damping_db": 9.42
+    }
+  },
+  "verification_status": {
+    "readable": true,
+    "mask_aligned": true,
+    "finite_values": true,
+    "part3_excluded": true
+  }
+}

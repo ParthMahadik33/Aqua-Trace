@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import {
   Radio,
   Search,
@@ -143,13 +144,13 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
     <header className="fixed top-0 left-0 right-0 h-14 bg-[#080C14]/95 border-b border-white/10 z-[700] flex items-center justify-between px-4 backdrop-blur-md text-zinc-200">
       {/* Left: Branding & Dynamic Sector Dropdown */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-600/30 border border-cyan-500/40 flex items-center justify-center shadow-lg shadow-cyan-500/10">
-            <Radio className="w-4 h-4 text-cyan-400 animate-pulse" />
+        <Link href="/" className="flex items-center gap-2.5 group cursor-pointer" title="Return to AquaTrace Overview">
+          <div className="w-8 h-8 rounded-lg bg-cyan-950/40 border border-cyan-500/40 flex items-center justify-center shadow-lg shadow-cyan-500/10 group-hover:border-cyan-400 transition-colors overflow-hidden p-0.5">
+            <img src="/logo.png" alt="AquaTrace" className="w-full h-full object-contain" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-mono font-black text-white text-base tracking-wider">
+              <span className="font-mono font-black text-white text-base tracking-wider group-hover:text-cyan-300 transition-colors">
                 AQUATRACE
               </span>
               <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 tracking-widest uppercase">
@@ -160,7 +161,33 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
               MARITIME DOMAIN AWARENESS // LIVE AIS
             </div>
           </div>
-        </div>
+        </Link>
+
+        {/* Tactical Navigation: LIVE OPERATIONS vs INCIDENT SIMULATION */}
+        <nav className="flex items-center p-0.5 rounded-lg bg-[#0E1524] border border-white/10 font-mono text-xs shadow-inner">
+          <Link
+            href="/operations"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 shadow-sm font-semibold tracking-wider text-[11px]"
+            title="Live Operational Feed: Real AIS Tracking & Sentinel-1 SAR Integration"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span>LIVE OPERATIONS</span>
+          </Link>
+          <Link
+            href="/simulation"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-zinc-400 hover:text-amber-300 hover:bg-amber-500/10 transition-colors font-medium tracking-wider text-[11px] group"
+            title="Incident Simulation: Dedicated Case 0004 Prototype Investigation"
+          >
+            <div className="w-2 h-2 rounded-full bg-amber-400/60 group-hover:bg-amber-400 group-hover:shadow-[0_0_8px_rgba(245,158,11,0.8)] transition-all" />
+            <span>INCIDENT SIMULATION</span>
+            <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              CASE 0004
+            </span>
+          </Link>
+        </nav>
 
         {/* Sector Selector Dropdown */}
         <div className="relative hidden md:block" ref={sectorDropdownRef}>

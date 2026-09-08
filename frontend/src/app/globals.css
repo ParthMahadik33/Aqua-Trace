@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html {
+  scroll-behavior: smooth;
+}
+
 @layer base {
   :root {
     --background: #070a10;
@@ -9,7 +13,8 @@
   body {
     background-color: #070a10;
     color: #f3f4f6;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     user-select: none;
     -webkit-font-smoothing: antialiased;
   }

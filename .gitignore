@@ -42,3 +42,21 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# ML Datasets & Models
+ml/datasets/raw/*
+!ml/datasets/raw/.gitkeep
+ml/datasets/interim/*
+!ml/datasets/interim/.gitkeep
+ml/datasets/processed/*
+!ml/datasets/processed/.gitkeep
+ml/reports/*.json
+ml/reports/*.md
+!ml/reports/.gitkeep
+*.pt
+*.pth
+*.onnx
+
+# Clones & External Repositories
+AquaTrace_frontend/
+
