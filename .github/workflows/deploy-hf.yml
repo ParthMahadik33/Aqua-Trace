@@ -1,0 +1,33 @@
+﻿name: Sync Backend to Hugging Face Spaces
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-hf.yml'
+  workflow_dispatch:
+
+jobs:
+  sync-to-huggingface:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE: ${{ vars.HF_SPACE }} # e.g. "username/aquatrace-backend"
+        run: |
+          if [ -n "$HF_SPACE" ] && [ -n "$HF_TOKEN" ]; then
+            echo "Syncing backend/ to https://huggingface.co/spaces/$HF_SPACE..."
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git subtree split --prefix=backend -b hf-sync
+            git push -f https://x-access-token:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE} hf-sync:main
+          else
+            echo "HF_SPACE or HF_TOKEN not configured. Skipping automated sync."
+          fi
