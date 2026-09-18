@@ -31,14 +31,9 @@ export const AisCorrelationMapLayer: React.FC<AisCorrelationMapLayerProps> = ({
   const [hoursAgo, setHoursAgo] = useState<number>(5.5); // Default to release window (12:00 UTC)
   const [isPlayingTimeline, setIsPlayingTimeline] = useState<boolean>(false);
 
-  const filterHudRef = useRef<HTMLDivElement>(null);
   const scrubberHudRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (filterHudRef.current) {
-      L.DomEvent.disableClickPropagation(filterHudRef.current);
-      L.DomEvent.disableScrollPropagation(filterHudRef.current);
-    }
     if (scrubberHudRef.current) {
       L.DomEvent.disableClickPropagation(scrubberHudRef.current);
       L.DomEvent.disableScrollPropagation(scrubberHudRef.current);
@@ -322,66 +317,13 @@ export const AisCorrelationMapLayer: React.FC<AisCorrelationMapLayerProps> = ({
         );
       })}
 
-      {/* 3. INTERACTIVE HUD: MULTI-STAGE AIS FILTER CONTROLS (Top-Left) */}
-      <div className="leaflet-bottom leaflet-left !bottom-24 !left-4 pointer-events-auto z-[500]">
-        <div ref={filterHudRef} className="p-3 rounded-xl bg-[#080C14]/95 border border-white/15 backdrop-blur-md shadow-2xl font-mono text-xs max-w-md">
-          <div className="flex items-center justify-between pb-2 border-b border-white/10">
-            <div className="flex items-center gap-2">
-              <Filter className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="font-bold text-white tracking-wider text-[11px]">
-                AIS REASONING FILTER
-              </span>
-            </div>
-            <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[10px] font-bold border border-cyan-500/40">
-              {survivingCount} / {vesselCount} ACTIVE
-            </span>
-          </div>
-
-          {/* Interactive Step Buttons */}
-          <div className="grid grid-cols-5 gap-1 mt-2.5">
-            {[
-              { step: 0, label: '0. INGEST', count: 47 },
-              { step: 1, label: '1. SPATIAL', count: 8 },
-              { step: 2, label: '2. TIME', count: 5 },
-              { step: 3, label: '3. TRACK', count: 3 },
-              { step: 4, label: '4. PRIORITY', count: 2 },
-            ].map((st) => (
-              <button
-                key={st.step}
-                onClick={() => setFilterStep(st.step)}
-                className={`px-2 py-1.5 rounded text-center transition-all cursor-pointer border ${
-                  filterStep === st.step
-                    ? 'bg-cyan-500/25 border-cyan-400 text-cyan-200 font-bold shadow-[0_0_10px_rgba(6,182,212,0.2)]'
-                    : filterStep > st.step
-                    ? 'bg-white/5 border-white/10 text-zinc-400 hover:text-white'
-                    : 'bg-transparent border-transparent text-zinc-600 hover:text-zinc-400'
-                }`}
-              >
-                <div className="text-[9px] tracking-wider leading-none">{st.label}</div>
-                <div className="text-[11px] font-bold mt-1 text-white">{st.count}</div>
-              </button>
-            ))}
-          </div>
-
-          <div className="mt-2 pt-2 border-t border-white/5 text-[10px] text-zinc-400 flex items-center justify-between">
-            <span>
-              {filterStep === 0 && 'Ingesting 47 German Bight Class-A vessels'}
-              {filterStep === 1 && 'Spatial buffer: eliminated 39 peripheral tracks (>15 nm)'}
-              {filterStep === 2 && 'Temporal window: eliminated 3 out-of-window transits'}
-              {filterStep === 3 && 'Trajectory alignment: eliminated 2 opposing headings'}
-              {filterStep === 4 && 'Priority candidates: 2 vessels intersect source corridor'}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. COMPACT TIME SCRUBBER BAR (Bottom-Center of Map) */}
+      {/* COMPACT TIME SCRUBBER BAR (Bottom-Center of Map) */}
       <div className="leaflet-bottom leaflet-left !bottom-4 !left-4 !right-4 pointer-events-auto z-[500] flex justify-center">
-        <div ref={scrubberHudRef} className="px-4 py-2.5 rounded-xl bg-[#080C14]/95 border border-white/15 backdrop-blur-md shadow-2xl flex items-center gap-4 text-xs font-mono w-full max-w-2xl">
+        <div ref={scrubberHudRef} className="px-3.5 py-2 rounded bg-surface/95 border border-border shadow-md backdrop-blur-md flex items-center gap-3 text-xs font-mono w-full max-w-xl text-foreground">
           {/* Play/Pause Button */}
           <button
             onClick={() => setIsPlayingTimeline(!isPlayingTimeline)}
-            className="p-2 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 text-cyan-300 transition-all cursor-pointer"
+            className="p-1.5 rounded bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/40 text-sky-700 dark:text-sky-300 transition-all cursor-pointer"
             title={isPlayingTimeline ? 'Pause timeline playback' : 'Play historical vessel motion'}
           >
             {isPlayingTimeline ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
@@ -390,7 +332,7 @@ export const AisCorrelationMapLayer: React.FC<AisCorrelationMapLayerProps> = ({
           {/* Reset button */}
           <button
             onClick={() => setHoursAgo(5.5)}
-            className="p-1.5 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+            className="p-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             title="Reset to release window (T-5.5h / 12:00 UTC)"
           >
             <RotateCcw className="w-3 h-3" />
@@ -398,14 +340,14 @@ export const AisCorrelationMapLayer: React.FC<AisCorrelationMapLayerProps> = ({
 
           {/* Scrubber slider */}
           <div className="flex-1 flex flex-col gap-1">
-            <div className="flex justify-between text-[10px] text-zinc-400">
-              <span className={hoursAgo > 36 ? 'text-cyan-300 font-bold' : ''}>T - 48h</span>
-              <span className={hoursAgo <= 36 && hoursAgo > 24 ? 'text-cyan-300 font-bold' : ''}>T - 36h</span>
-              <span className={hoursAgo <= 24 && hoursAgo > 12 ? 'text-cyan-300 font-bold' : ''}>T - 24h</span>
-              <span className={hoursAgo <= 12 && hoursAgo > 4 ? 'text-amber-400 font-bold' : ''}>
-                T - 5.5h (RELEASE)
+            <div className="flex justify-between text-[10px] text-muted-foreground">
+              <span className={hoursAgo > 36 ? 'text-sky-600 dark:text-sky-300 font-bold' : ''}>T-48h</span>
+              <span className={hoursAgo <= 36 && hoursAgo > 24 ? 'text-sky-600 dark:text-sky-300 font-bold' : ''}>T-36h</span>
+              <span className={hoursAgo <= 24 && hoursAgo > 12 ? 'text-sky-600 dark:text-sky-300 font-bold' : ''}>T-24h</span>
+              <span className={hoursAgo <= 12 && hoursAgo > 4 ? 'text-amber-600 dark:text-amber-400 font-bold' : ''}>
+                T-5.5h (RELEASE)
               </span>
-              <span className={hoursAgo <= 2 ? 'text-cyan-300 font-bold' : ''}>NOW (T0)</span>
+              <span className={hoursAgo <= 2 ? 'text-sky-600 dark:text-sky-300 font-bold' : ''}>NOW (T0)</span>
             </div>
             <input
               type="range"
@@ -414,20 +356,20 @@ export const AisCorrelationMapLayer: React.FC<AisCorrelationMapLayerProps> = ({
               step="0.5"
               value={48 - hoursAgo}
               onChange={(e) => setHoursAgo(48 - parseFloat(e.target.value))}
-              className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+              className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-sky-500"
             />
           </div>
 
           {/* Time Readout */}
-          <div className="text-right min-w-[110px]">
-            <div className="text-[11px] font-bold text-white">
+          <div className="text-right min-w-[100px]">
+            <div className="text-[11px] font-bold text-foreground">
               T - {hoursAgo.toFixed(1)}h
             </div>
-            <div className="text-[9px] text-zinc-500">
+            <div className="text-[9px] text-muted-foreground">
               {hoursAgo >= 4 && hoursAgo <= 6 ? (
-                <span className="text-amber-400 font-bold">RELEASE CORRIDOR</span>
+                <span className="text-amber-600 dark:text-amber-400 font-bold">RELEASE WINDOW</span>
               ) : (
-                'HISTORICAL TRACK'
+                'HISTORICAL AIS'
               )}
             </div>
           </div>

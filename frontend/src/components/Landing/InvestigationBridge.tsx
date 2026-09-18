@@ -10,64 +10,54 @@ export const InvestigationBridge: React.FC = () => {
   };
 
   return (
-    <section id="investigation-bridge" className="relative w-full bg-[#05070C] border-t border-white/10 pt-24 pb-16 px-6 sm:px-12 lg:px-16 select-none scroll-mt-16">
+    <section id="investigation-bridge" className="relative w-full bg-slate-950 dark:bg-[#070B14] light:bg-slate-100 border-t border-slate-800 dark:border-slate-800 light:border-slate-300 pt-20 pb-16 px-6 sm:px-12 lg:px-16 select-none scroll-mt-16 transition-colors">
       <div className="max-w-7xl mx-auto">
         {/* Core Bridge Banner */}
-        <div className="relative rounded-2xl bg-gradient-to-b from-[#0A0F1D] to-[#070A12] border border-cyan-500/25 p-8 sm:p-14 overflow-hidden shadow-2xl">
-          {/* Subtle Background Structural Accent */}
-          <div
-            className="absolute inset-0 pointer-events-none opacity-25"
-            style={{
-              backgroundImage:
-                'linear-gradient(to right, rgba(6, 182, 212, 0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(6, 182, 212, 0.1) 1px, transparent 1px)',
-              backgroundSize: '40px 40px',
-            }}
-          />
-
+        <div className="relative rounded-xl bg-slate-900 dark:bg-slate-900 light:bg-white border border-slate-700 dark:border-slate-800 light:border-slate-300 p-8 sm:p-12 overflow-hidden shadow-md">
           <div className="relative z-10 max-w-3xl">
-            <div className="flex items-center gap-2 text-xs font-mono text-cyan-400 tracking-widest uppercase mb-4">
-              <ShieldCheck className="w-4 h-4 text-cyan-400" />
-              <span>INCIDENT RECONSTRUCTION PIPELINE</span>
+            <div className="flex items-center gap-2 text-xs font-mono text-sky-400 dark:text-sky-400 light:text-sky-700 tracking-widest uppercase mb-4 font-semibold">
+              <ShieldCheck className="w-4 h-4" />
+              <span>INCIDENT INVESTIGATION WORKFLOW</span>
             </div>
 
-            <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-white uppercase leading-tight">
-              FROM OBSERVATIONS<br />
-              <span className="text-cyan-400">TO INVESTIGATION.</span>
+            <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-white dark:text-white light:text-slate-900 uppercase leading-tight font-mono">
+              FROM SATELLITE OBSERVATION<br />
+              <span className="text-sky-400 dark:text-sky-400 light:text-sky-600">TO DEFENSIBLE SOURCE HYPOTHESIS.</span>
             </h2>
 
-            <p className="mt-6 text-base sm:text-lg text-zinc-300 font-light leading-relaxed">
-              Satellite imagery and vessel movement are only the beginning. AquaTrace connects these observations into an evidence-driven incident investigation workflow.
+            <p className="mt-5 text-sm sm:text-base text-slate-300 dark:text-slate-300 light:text-slate-600 font-normal leading-relaxed">
+              Satellite observations and AIS telemetry are integrated through a deterministic 12-stage forensic pipeline: SAR Screening, Segmentation, Lagrangian Hindcast, AIS Shortlisting, Counterfactual Simulation, and Exposure Assessment.
             </p>
 
             {/* Pillars Overview */}
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-xs text-zinc-400">
-              <div className="flex items-center gap-2.5 p-3 rounded-lg bg-white/5 border border-white/10">
-                <Satellite className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                <span>SAR DELINEATION</span>
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-xs text-slate-300 dark:text-slate-300 light:text-slate-700">
+              <div className="flex items-center gap-2.5 p-3 rounded bg-slate-800/60 dark:bg-slate-800/60 light:bg-slate-50 border border-slate-700 dark:border-slate-700 light:border-slate-200">
+                <Satellite className="w-4 h-4 text-sky-400 dark:text-sky-400 light:text-sky-600 flex-shrink-0" />
+                <span className="font-medium">SAR DELINEATION</span>
               </div>
-              <div className="flex items-center gap-2.5 p-3 rounded-lg bg-white/5 border border-white/10">
-                <Waves className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                <span>DRIFT TRAJECTORY</span>
+              <div className="flex items-center gap-2.5 p-3 rounded bg-slate-800/60 dark:bg-slate-800/60 light:bg-slate-50 border border-slate-700 dark:border-slate-700 light:border-slate-200">
+                <Waves className="w-4 h-4 text-sky-400 dark:text-sky-400 light:text-sky-600 flex-shrink-0" />
+                <span className="font-medium">LAGRANGIAN HINDCAST</span>
               </div>
-              <div className="flex items-center gap-2.5 p-3 rounded-lg bg-white/5 border border-white/10">
-                <Navigation className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                <span>VESSEL ATTRIBUTION</span>
+              <div className="flex items-center gap-2.5 p-3 rounded bg-slate-800/60 dark:bg-slate-800/60 light:bg-slate-50 border border-slate-700 dark:border-slate-700 light:border-slate-200">
+                <Navigation className="w-4 h-4 text-sky-400 dark:text-sky-400 light:text-sky-600 flex-shrink-0" />
+                <span className="font-medium">ATTRIBUTION CONSISTENCY</span>
               </div>
             </div>
 
             {/* Primary Action Button */}
-            <div className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+            <div className="mt-9 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
               <Link
                 href="/simulation"
-                className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-lg bg-amber-500 hover:bg-amber-400 text-[#070A10] font-mono font-bold text-sm tracking-wider uppercase transition-all shadow-[0_0_24px_rgba(245,158,11,0.35)] hover:shadow-[0_0_32px_rgba(245,158,11,0.55)] cursor-pointer group"
+                className="inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded bg-sky-600 hover:bg-sky-500 text-white font-mono font-bold text-sm tracking-wider uppercase transition-colors shadow-sm cursor-pointer group"
               >
-                <span>OPEN INCIDENT SIMULATION</span>
+                <span>RUN INCIDENT INVESTIGATION</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
 
               <Link
                 href="/operations"
-                className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/15 font-mono text-sm tracking-wider uppercase transition-all cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded bg-transparent hover:bg-slate-800/50 dark:hover:bg-slate-800/50 light:hover:bg-slate-100 text-slate-300 dark:text-slate-300 light:text-slate-700 border border-slate-700 dark:border-slate-700 light:border-slate-300 font-mono text-sm tracking-wider uppercase transition-colors cursor-pointer"
               >
                 <span>OPEN LIVE OPERATIONS</span>
               </Link>
@@ -76,9 +66,9 @@ export const InvestigationBridge: React.FC = () => {
         </div>
 
         {/* Technical Maritime Intelligence Footer */}
-        <div className="mt-16 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-xs text-zinc-500">
+        <div className="mt-14 pt-6 border-t border-slate-800 dark:border-slate-800 light:border-slate-300 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-xs text-slate-400 dark:text-slate-400 light:text-slate-500">
           <div className="flex items-center gap-3">
-            <span className="text-zinc-300 font-bold tracking-wider">AQUATRACE</span>
+            <span className="text-slate-200 dark:text-slate-200 light:text-slate-800 font-bold tracking-wider">AQUATRACE</span>
             <span>//</span>
             <span>COPERNICUS SENTINEL-1 SAR &middot; AISSTREAM TELEMETRY</span>
           </div>

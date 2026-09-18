@@ -3,11 +3,13 @@
 import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { SimulationHeaderBar } from '@/components/Header/SimulationHeaderBar';
-import { SimulationPipelineNav } from '@/components/Simulation/SimulationPipelineNav';
+import { WorkflowProgress } from '@/components/Simulation/WorkflowProgress';
+import { ConclusionPanel } from '@/components/Simulation/ConclusionPanel';
 import { SimulationPrimaryVisual } from '@/components/Simulation/SimulationPrimaryVisual';
 import { SimulationInspector } from '@/components/Simulation/SimulationInspector';
 import { IncidentReportModal } from '@/components/Simulation/IncidentReportModal';
 import { EvidenceGraphModal } from '@/components/Simulation/EvidenceGraphModal';
+import { getForecastState } from '@/data/case0004ImpactForecast';
 import {
   SIMULATION_STEPS,
   CASE_0004_SAR_METADATA,
@@ -428,9 +430,81 @@ function SimulationPageContent() {
     });
   }, [sarMetadata, selectedCandidate, candidatesList, dynamicCounterfactual, incident]);
 
+  // Stage-to-stage dynamic storytelling overrides (answering What was observed, What was calculated, Conclusion, Next Step)
+  const activeStoryOverride = useMemo(() => {
+    if (currentStep.id === 'attribution') {
+      const cand = selectedCandidate || (candidatesList && candidatesList[0]) || CASE_0004_CANDIDATES[0];
+      const attrExecution = attributionEngine.execute({
+        vessel: cand,
+        counterfactualResult: dynamicCounterfactual,
+        slickAxisDeg: 52.0,
+      });
+      const score = attrExecution.result.attributionScore;
+      const status: 'SUPPORTED' | 'WEAK' | 'INCONCLUSIVE' =
+        score >= 80 ? 'SUPPORTED' : score >= 50 ? 'WEAK' : 'INCONCLUSIVE';
+      return {
+        observation: `${cand.name} (MMSI ${cand.mmsi}) track intersects the reconstructed Lagrangian corridor.`,
+        analysis: `Evaluated 5 weighted factors: proximity (${attrExecution.result.factors.spatialProximity.score}), timing (${attrExecution.result.factors.temporalCompatibility.score}), trajectory (${attrExecution.result.factors.trajectoryConsistency.score}), anomaly, metocean.`,
+        conclusion: `${cand.name} Attribution Consistency: ${score}/100. Hypothesis ${status}.`,
+        conclusionHighlight: `Composite attribution score is ${score}/100 (${status}).`,
+        status,
+        nextStep: 'Execute hydrodynamic counterfactual simulation to test physical viability.',
+      };
+    }
+
+    if (currentStep.id === 'counterfactual') {
+      const isDynamic = Boolean(dynamicCounterfactual && dynamicCounterfactual.isDynamic);
+      const cand = dynamicCounterfactual?.candidate || selectedCandidate || CASE_0004_CANDIDATES[0];
+      const verdict: 'SUPPORTED' | 'WEAK' | 'INCONCLUSIVE' = isDynamic
+        ? dynamicCounterfactual.verdict || 'INCONCLUSIVE'
+        : 'INCONCLUSIVE';
+      const offsetNm = isDynamic ? dynamicCounterfactual.metrics?.centroid_distance_nm ?? 8.72 : 8.72;
+      const orientDelta = isDynamic ? dynamicCounterfactual.metrics?.orientation_delta_deg ?? 15.4 : 15.4;
+      return {
+        observation: `Hypothetical discharge simulated along ${cand.name} track under baseline metocean forcing.`,
+        analysis: `Forward Lagrangian plume model evaluated against observed SAR slick centroid and major axis heading.`,
+        conclusion: `Hypothesis ${verdict}.`,
+        conclusionHighlight: `${offsetNm} NM centroid offset · ${orientDelta}° orientation divergence.`,
+        status: verdict,
+        nextStep: 'Compare remaining candidate hypotheses or inspect environmental sensitivity.',
+      };
+    }
+
+    if (currentStep.id === 'impact_prioritization') {
+      const forecastState = getForecastState(impactHours);
+      return {
+        observation: `Surface slick drifting towards North Frisian coastal zones under prevailing 072° ENE surface current.`,
+        analysis: `Ensemble forward trajectory evaluated at forecast horizon T+${impactHours}h. Plume area estimated at ${forecastState.areaKm2.toFixed(2)} km².`,
+        conclusion:
+          impactHours >= 31
+            ? 'Coastal interaction becomes plausible near T+31h.'
+            : `No immediate coastal interaction at current horizon (T+${impactHours}h).`,
+        conclusionHighlight:
+          impactHours >= 31
+            ? 'Sylt-Rømø Wadden Sea barrier islands within plausible trajectory.'
+            : 'Plume currently remains in offshore shipping corridor.',
+        status: impactHours >= 31 ? ('FLAGGED' as any) : 'NOMINAL',
+        nextStep: 'Compile formal Incident Investigation Dossier.',
+      };
+    }
+
+    if (currentStep.id === 'ais_correlation' && incident) {
+      return {
+        observation: `AIS telemetry query completed for incident ${incident.incident_id}.`,
+        analysis: `Spatiotemporal filtering applied against backward hindcast release window.`,
+        conclusion: `${candidatesList.length} candidate vessels remain after spatial and temporal filtering.`,
+        conclusionHighlight: `${candidatesList.map((c) => c.name).join(', ')} identified for candidate evaluation.`,
+        status: 'NOMINAL',
+        nextStep: 'Compute multi-factor Attribution Consistency scores.',
+      };
+    }
+
+    return undefined;
+  }, [currentStep.id, selectedCandidate, candidatesList, dynamicCounterfactual, impactHours, incident]);
+
   return (
-    <main className="relative w-screen h-screen overflow-hidden bg-[#070A10] select-none flex flex-col">
-      {/* Top Header with Mode Switcher and Prominent MODE: SIMULATION / INCIDENT Banner */}
+    <main className="relative w-screen h-screen overflow-hidden bg-background text-foreground select-none flex flex-col transition-colors">
+      {/* Top Header with Mode Switcher and Prominent Case Identification */}
       <SimulationHeaderBar
         currentStep={currentStep}
         currentStepIndex={currentStepIndex}
@@ -447,30 +521,30 @@ function SimulationPageContent() {
       />
 
       {/* Main Workspace (Offset below fixed header) */}
-      <div className="pt-16 flex flex-col flex-1 h-full overflow-hidden">
+      <div className="pt-14 flex flex-col flex-1 h-full overflow-hidden">
         {/* Real vs Derived vs Prototype Provenance HUD Strip */}
         {incident && (
-          <div className="bg-[#0A0E18] border-b border-amber-500/30 px-4 py-2 flex flex-wrap items-center justify-between text-xs font-mono gap-2 z-20 shadow-md">
+          <div className="bg-panel border-b border-border px-4 py-2 flex flex-wrap items-center justify-between text-xs font-mono gap-2 z-20 shadow-sm">
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <span className="flex items-center gap-1.5 font-bold text-amber-400">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+              <span className="flex items-center gap-1.5 font-bold text-amber-600 dark:text-amber-400">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
                 INCIDENT: {incident.incident_id}
               </span>
-              <span className="text-zinc-600 hidden sm:inline">|</span>
-              <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-semibold" title="Sentinel-1 SAR acquisition, radar damping, geographic bounding box, and AIS telemetry">
+              <span className="text-border hidden sm:inline">|</span>
+              <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 text-[10px] font-semibold" title="Sentinel-1 SAR acquisition, radar damping, geographic bounding box, and AIS telemetry">
                 REAL: Sentinel-1 SAR Metadata · AIS Telemetry · Incident Geometry
               </span>
-              <span className="px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 text-[10px] font-semibold" title="Kinematic vessel tracking, forward Lagrangian plume, geometric consistency, and hypothesis verdict">
+              <span className="px-2 py-0.5 rounded bg-sky-500/15 text-sky-800 dark:text-sky-300 border border-sky-500/30 text-[10px] font-semibold" title="Kinematic vessel tracking, forward Lagrangian plume, geometric consistency, and hypothesis verdict">
                 DERIVED: Counterfactual Vessel Drift · Plume Cloud · Consistency Metrics · Verdict
               </span>
-              <span className="px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[10px] font-semibold" title="Calm sea-state kinematic forcing baseline (CMEMS / ERA5 pending integration)">
+              <span className="px-2 py-0.5 rounded bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 text-[10px] font-semibold" title="Calm sea-state kinematic forcing baseline (CMEMS / ERA5 pending integration)">
                 PROTOTYPE: Environmental Baseline Forcing
               </span>
             </div>
             <div className="flex items-center gap-2">
               <a
                 href="/simulation"
-                className="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-zinc-300 hover:text-white border border-white/15 text-[10px] font-bold tracking-wider transition-colors cursor-pointer"
+                className="px-2.5 py-1 rounded bg-surface hover:bg-panel text-foreground border border-border text-[10px] font-bold tracking-wider transition-colors cursor-pointer"
                 title="Switch back to static Case 0004 benchmark"
               >
                 ← CASE 0004 BENCHMARK
@@ -479,8 +553,8 @@ function SimulationPageContent() {
           </div>
         )}
 
-        {/* 12-Stage Interactive Pipeline Navigation Bar */}
-        <SimulationPipelineNav
+        {/* Step-by-Step Investigation Workflow Hero */}
+        <WorkflowProgress
           steps={SIMULATION_STEPS}
           currentStepId={currentStep.id}
           onSelectStep={handleSelectStep}
@@ -488,43 +562,55 @@ function SimulationPageContent() {
 
         {/* 70 / 30 Investigation Split View */}
         <div className="flex flex-1 h-full overflow-hidden relative">
-          {/* Left ~70%: Primary Visual (Dominates Screen) */}
-          <div className="flex-1 h-full relative overflow-hidden">
-            <SimulationPrimaryVisual
-              currentStepId={currentStep.id}
-              sarMetadata={sarMetadata}
-              metocean={CASE_0004_METOCEAN}
-              sourceRecon={CASE_0004_SOURCE_RECONSTRUCTION}
-              candidates={incident ? candidatesList : CASE_0004_CANDIDATES}
-              counterfactual={CASE_0004_COUNTERFACTUAL_SCENARIOS}
-              impact={CASE_0004_IMPACT}
-              selectedCandidate={selectedCandidate}
-              onSelectCandidate={(cand) => {
-                setSelectedCandidate(cand);
-                runDynamicCounterfactual(cand, incident);
-              }}
-              activeOverlayMode={activeOverlayMode}
-              onChangeOverlayMode={setActiveOverlayMode}
-              overlayOpacity={overlayOpacity}
-              onChangeOverlayOpacity={setOverlayOpacity}
-              onOpenReport={() => setIsReportModalOpen(true)}
-              onOpenEvidenceGraph={handleOpenEvidenceGraph}
-              impactHours={impactHours}
-              onChangeImpactHours={setImpactHours}
-              isImpactPlaying={isImpactPlaying}
-              onToggleImpactPlay={() => setIsImpactPlaying(!isImpactPlaying)}
-              impactLayers={impactLayers}
-              onToggleImpactLayer={(key) =>
-                setImpactLayers((prev) => ({ ...prev, [key]: !prev[key] }))
-              }
-              dynamicCounterfactual={dynamicCounterfactual}
-              onRunCounterfactual={(cand) =>
-                runDynamicCounterfactual(cand || selectedCandidate, incident)
-              }
-            />
+          {/* Left ~70%: Primary Visual + Bottom Dominant Conclusion Region */}
+          <div className="flex-1 h-full flex flex-col overflow-hidden relative">
+            {/* Map / Primary Visual (Dominates ~65-75% screen) */}
+            <div className="flex-1 relative overflow-hidden">
+              <SimulationPrimaryVisual
+                currentStepId={currentStep.id}
+                sarMetadata={sarMetadata}
+                metocean={CASE_0004_METOCEAN}
+                sourceRecon={CASE_0004_SOURCE_RECONSTRUCTION}
+                candidates={incident ? candidatesList : CASE_0004_CANDIDATES}
+                counterfactual={CASE_0004_COUNTERFACTUAL_SCENARIOS}
+                impact={CASE_0004_IMPACT}
+                selectedCandidate={selectedCandidate}
+                onSelectCandidate={(cand) => {
+                  setSelectedCandidate(cand);
+                  runDynamicCounterfactual(cand, incident);
+                }}
+                activeOverlayMode={activeOverlayMode}
+                onChangeOverlayMode={setActiveOverlayMode}
+                overlayOpacity={overlayOpacity}
+                onChangeOverlayOpacity={setOverlayOpacity}
+                onOpenReport={() => setIsReportModalOpen(true)}
+                onOpenEvidenceGraph={handleOpenEvidenceGraph}
+                impactHours={impactHours}
+                onChangeImpactHours={setImpactHours}
+                isImpactPlaying={isImpactPlaying}
+                onToggleImpactPlay={() => setIsImpactPlaying(!isImpactPlaying)}
+                impactLayers={impactLayers}
+                onToggleImpactLayer={(key) =>
+                  setImpactLayers((prev) => ({ ...prev, [key]: !prev[key] }))
+                }
+                dynamicCounterfactual={dynamicCounterfactual}
+                onRunCounterfactual={(cand) =>
+                  runDynamicCounterfactual(cand || selectedCandidate, incident)
+                }
+              />
+            </div>
+
+            {/* Dominant Conclusion Region */}
+            <div className="flex-shrink-0 border-t border-border bg-surface px-4 py-2 z-20">
+              <ConclusionPanel
+                stepId={currentStep.id}
+                storyOverride={activeStoryOverride}
+                onNextStep={currentStepIndex < SIMULATION_STEPS.length - 1 ? handleNextStep : undefined}
+              />
+            </div>
           </div>
 
-          {/* Forensic Telemetry & Analysis Side Inspector */}
+          {/* Right ~30%: Forensic Telemetry & Analysis Side Inspector */}
           <SimulationInspector
             currentStep={currentStep}
             currentStepIndex={currentStepIndex}

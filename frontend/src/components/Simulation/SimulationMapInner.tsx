@@ -5,6 +5,7 @@ import {
   MapContainer,
   TileLayer,
   Rectangle,
+  Polygon,
   CircleMarker,
   Polyline,
   Tooltip,
@@ -26,6 +27,7 @@ import {
 import { AisCorrelationMapLayer } from './AisCorrelationMapLayer';
 import { ImpactForecastMapLayer } from './ImpactForecastMapLayer';
 import { CounterfactualMapLayer } from './CounterfactualMapLayer';
+import { useTheme } from '@/context/ThemeContext';
 
 // Fix standard Leaflet default icon issues in bundlers
 delete (L.Icon.Default.prototype as { _getIconUrl?: string })._getIconUrl;
@@ -58,6 +60,8 @@ interface SimulationMapInnerProps {
   counterfactualTimelineStep?: number;
 }
 
+import { SimulationMapControls } from './SimulationMapControls';
+
 // Controller for camera view transitions per simulation step (derived from active incident geometry)
 function SimulationCameraController({
   stepId,
@@ -65,12 +69,14 @@ function SimulationCameraController({
   sourceRecon,
   selectedCandidate,
   dynamicCenter,
+  dynamicCounterfactual,
 }: {
   stepId: SimulationStepId;
   sarMetadata: SarMetadata;
   sourceRecon: SourceReconstructionModel;
   selectedCandidate?: CandidateVessel | null;
   dynamicCenter?: [number, number];
+  dynamicCounterfactual?: any;
 }) {
   const map = useMap();
 
@@ -107,22 +113,72 @@ function SimulationCameraController({
       case 'environmental':
         map.flyTo(slickCenter, 10, { duration: 1.2 });
         break;
-      case 'source_reconstruction':
-        map.flyTo(originCenter, 11, { duration: 1.2 });
+      case 'source_reconstruction': {
+        const points: [number, number][] = [
+          [sarMetadata.slickBbox.minLat, sarMetadata.slickBbox.minLon],
+          [sarMetadata.slickBbox.maxLat, sarMetadata.slickBbox.maxLon],
+          [originLat, originLon],
+        ];
+        sourceRecon?.ensembleTrajectories?.forEach((ens) => {
+          ens.waypoints?.forEach((w) => points.push([w.lat, w.lon]));
+        });
+        const bounds = L.latLngBounds(points);
+        map.fitBounds(bounds, { padding: [55, 55], maxZoom: 13, animate: true, duration: 1.2 });
         break;
-      case 'ais_correlation':
+      }
+      case 'ais_correlation': {
+        const points: [number, number][] = [
+          [55.13, 5.70],
+          [55.24, 5.96],
+        ];
+        if (selectedCandidate?.trackWaypoints?.length) {
+          selectedCandidate.trackWaypoints.forEach((w) => points.push([w.lat, w.lon]));
+        } else {
+          points.push(vesselPos);
+        }
+        const bounds = L.latLngBounds(points);
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12, animate: true, duration: 1.2 });
+        break;
+      }
       case 'attribution':
-      case 'counterfactual':
         map.flyTo(vesselPos, 11, { duration: 1.2 });
         break;
-      case 'impact_prioritization':
-        map.flyTo(slickCenter, 9, { duration: 1.5 });
+      case 'counterfactual': {
+        const points: [number, number][] = [
+          [sarMetadata.slickBbox.minLat, sarMetadata.slickBbox.minLon],
+          [sarMetadata.slickBbox.maxLat, sarMetadata.slickBbox.maxLon],
+        ];
+        if (selectedCandidate?.trackWaypoints?.length) {
+          selectedCandidate.trackWaypoints.forEach((w) => points.push([w.lat, w.lon]));
+        } else {
+          points.push(vesselPos);
+        }
+        if (dynamicCounterfactual?.simulation?.plume_centroid) {
+          points.push([
+            dynamicCounterfactual.simulation.plume_centroid.lat,
+            dynamicCounterfactual.simulation.plume_centroid.lon,
+          ]);
+        }
+        const bounds = L.latLngBounds(points);
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13, animate: true, duration: 1.2 });
         break;
+      }
+      case 'impact_prioritization': {
+        const points: [number, number][] = [
+          slickCenter,
+          [54.20, 7.00],
+          [54.85, 6.70],
+          [55.30, 5.80],
+        ];
+        const bounds = L.latLngBounds(points);
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 10, animate: true, duration: 1.2 });
+        break;
+      }
       case 'report':
         map.flyTo(slickCenter, 10, { duration: 1.2 });
         break;
     }
-  }, [stepId, map, dynamicCenter, sarMetadata, sourceRecon, selectedCandidate]);
+  }, [stepId, map, dynamicCenter, sarMetadata, sourceRecon, selectedCandidate, dynamicCounterfactual]);
 
   return null;
 }
@@ -179,6 +235,7 @@ export const SimulationMapInner: React.FC<SimulationMapInnerProps> = ({
 
   // Primary suspect
   const primarySuspect = candidates.find((c) => c.isPrimarySuspect) || candidates[0];
+  const { theme } = useTheme();
 
   return (
       <MapContainer
@@ -190,12 +247,22 @@ export const SimulationMapInner: React.FC<SimulationMapInnerProps> = ({
         attributionControl={false}
         className="w-full h-full z-0 cursor-crosshair"
       >
-        {/* Esri Dark Gray Tactical Basemap */}
-        <TileLayer
-          url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
-          maxZoom={16}
-          attribution="&copy; Esri &mdash; Esri, DeLorme, NAVTEQ"
-        />
+        {/* Dynamic Basemap: Light mode uses Esri Light Gray Canvas; Dark mode uses Esri Dark Gray Canvas */}
+        {theme === 'light' ? (
+          <TileLayer
+            key="esri-light"
+            url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+            maxZoom={16}
+            attribution="&copy; Esri &mdash; Esri, DeLorme, NAVTEQ"
+          />
+        ) : (
+          <TileLayer
+            key="esri-dark"
+            url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+            maxZoom={16}
+            attribution="&copy; Esri &mdash; Esri, DeLorme, NAVTEQ"
+          />
+        )}
 
         <SimulationCameraController
           stepId={currentStepId}
@@ -203,6 +270,16 @@ export const SimulationMapInner: React.FC<SimulationMapInnerProps> = ({
           sourceRecon={sourceRecon}
           selectedCandidate={selectedCandidate}
           dynamicCenter={dynamicCenter}
+          dynamicCounterfactual={dynamicCounterfactual}
+        />
+
+        {/* Analyst Map Controls (Zoom, Fit Evidence, Fit Source, Fit Vessel, Fit Slick, Fit Plume) */}
+        <SimulationMapControls
+          currentStepId={currentStepId}
+          sarMetadata={sarMetadata}
+          selectedCandidate={selectedCandidate}
+          sourceRecon={sourceRecon}
+          dynamicCounterfactual={dynamicCounterfactual}
         />
 
         {/* 1. Sentinel-1 SAR Acquisition Footprint */}
@@ -233,12 +310,11 @@ export const SimulationMapInner: React.FC<SimulationMapInnerProps> = ({
           />
         )}
 
-        {/* 3. Delineated Slick Polygon (Highlighted in segmentation & later) */}
+        {/* 3. Delineated Slick Polygon (Highlighted in segmentation & later; Counterfactual uses dedicated layer) */}
         {(currentStepId === 'segmentation' ||
           currentStepId === 'source_reconstruction' ||
           currentStepId === 'ais_correlation' ||
           currentStepId === 'attribution' ||
-          currentStepId === 'counterfactual' ||
           currentStepId === 'impact_prioritization' ||
           currentStepId === 'report') && (
           <>
@@ -333,19 +409,41 @@ export const SimulationMapInner: React.FC<SimulationMapInnerProps> = ({
           currentStepId === 'attribution' ||
           currentStepId === 'report') && (
           <>
-            {/* Render each of the 5 ensemble trajectories */}
-            {sourceRecon.ensembleTrajectories.map((ens) => (
-              <Polyline
-                key={ens.ensembleId}
-                positions={ens.waypoints.map((w) => [w.lat, w.lon])}
-                pathOptions={{
-                  color: ens.color,
-                  weight: ens.ensembleId === 1 ? 3.5 : 1.5,
-                  dashArray: ens.ensembleId === 1 ? '4, 4' : '2, 4',
-                  opacity: ens.ensembleId === 1 ? 0.95 : 0.5,
-                }}
-              />
-            ))}
+            {/* Render each of the 5 ensemble trajectories with clear colors, weights, and labels */}
+            {sourceRecon.ensembleTrajectories.map((ens) => {
+              const ensembleStyles: Record<number, { color: string; dash?: string; label: string; weight: number }> = {
+                1: { color: '#10B981', label: 'ENS #1 (MEAN CONTROL - 35%)', weight: 3.5 },
+                2: { color: '#06B6D4', dash: '4, 4', label: 'ENS #2 (+10% WINDAGE - 20%)', weight: 2.2 },
+                3: { color: '#3B82F6', dash: '4, 4', label: 'ENS #3 (-10% WINDAGE - 20%)', weight: 2.2 },
+                4: { color: '#F59E0B', dash: '5, 5', label: 'ENS #4 (+15% CURRENT N - 12.5%)', weight: 2.2 },
+                5: { color: '#EC4899', dash: '5, 5', label: 'ENS #5 (-15% CURRENT S - 12.5%)', weight: 2.2 },
+              };
+              const style = ensembleStyles[ens.ensembleId] || {
+                color: ens.color || '#10B981',
+                dash: '4, 4',
+                label: `ENS #${ens.ensembleId}`,
+                weight: 2,
+              };
+
+              return (
+                <Polyline
+                  key={ens.ensembleId}
+                  positions={ens.waypoints.map((w) => [w.lat, w.lon])}
+                  pathOptions={{
+                    color: style.color,
+                    weight: style.weight,
+                    dashArray: style.dash,
+                    opacity: 0.9,
+                  }}
+                >
+                  <Tooltip direction="top" className="tactical-tooltip">
+                    <div className="px-2 py-1 rounded bg-[#061814]/95 border border-emerald-400/40 text-emerald-300 font-mono text-[9px] shadow-lg">
+                      {style.label}
+                    </div>
+                  </Tooltip>
+                </Polyline>
+              );
+            })}
 
             {/* Trajectory Time Waypoints on Primary Ensemble */}
             {sourceRecon.trajectoryPoints.map((pt, i) => (
@@ -368,10 +466,37 @@ export const SimulationMapInner: React.FC<SimulationMapInnerProps> = ({
               </CircleMarker>
             ))}
 
-            {/* Origin Locus Probability Ellipse */}
+            {/* Reconstructed Source Corridor Geographic Polygon */}
+            <Polygon
+              positions={[
+                [55.15, 5.70],
+                [55.17, 5.74],
+                [55.21, 5.83],
+                [55.23, 5.92],
+                [55.21, 5.96],
+                [55.18, 5.90],
+                [55.15, 5.82],
+                [55.13, 5.75],
+              ]}
+              pathOptions={{
+                color: '#EF4444',
+                weight: 2,
+                dashArray: '4, 6',
+                fillColor: '#EF4444',
+                fillOpacity: 0.12,
+              }}
+            >
+              <Tooltip permanent direction="top" className="tactical-tooltip">
+                <div className="px-2 py-0.5 rounded bg-[#180A0A]/95 border border-red-500/70 text-red-300 font-mono text-[9px] shadow-xl">
+                  SOURCE CORRIDOR // CONVERGENCE 11:45–13:20 UTC
+                </div>
+              </Tooltip>
+            </Polygon>
+
+            {/* Origin Centroid Locus Indicator */}
             <CircleMarker
               center={[sourceRecon.originCentroid.lat, sourceRecon.originCentroid.lon]}
-              radius={24}
+              radius={32}
               pathOptions={{
                 color: '#EF4444',
                 fillColor: '#EF4444',
@@ -380,9 +505,9 @@ export const SimulationMapInner: React.FC<SimulationMapInnerProps> = ({
                 dashArray: '3, 4',
               }}
             >
-              <Tooltip permanent direction="top" className="tactical-tooltip">
+              <Tooltip direction="bottom" className="tactical-tooltip">
                 <div className="px-2 py-1 rounded bg-[#180A0A]/95 border border-red-500/70 text-red-300 font-mono text-[10px] shadow-xl">
-                  SOURCE HYPOTHESIS: 11:45–13:20 UTC // EST. 215 m³
+                  ESTIMATED ORIGIN // 12:35 UTC · 215 m³
                 </div>
               </Tooltip>
             </CircleMarker>
@@ -397,9 +522,8 @@ export const SimulationMapInner: React.FC<SimulationMapInnerProps> = ({
           />
         )}
 
-        {/* 6B. Candidate AIS Vessel Trajectories (Stages 09 Attribution, 10 Counterfactual, 12 Report) */}
+        {/* 6B. Candidate AIS Vessel Trajectories (Stages 09 Attribution, 12 Report) */}
         {(currentStepId === 'attribution' ||
-          currentStepId === 'counterfactual' ||
           currentStepId === 'report') && (
           <>
             {candidates.map((vessel) => {

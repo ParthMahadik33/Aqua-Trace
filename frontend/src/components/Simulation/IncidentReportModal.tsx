@@ -116,19 +116,19 @@ INVESTIGATIVE STANDARD MANDATORY NOTICE:
   };
 
   return (
-    <div className="fixed inset-0 z-[900] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 select-text animate-in fade-in duration-150">
-      <div className="relative w-full max-w-4xl max-h-[90vh] bg-[#0A0E17] border border-white/20 rounded-2xl flex flex-col shadow-2xl overflow-hidden font-sans text-zinc-200">
+    <div className="fixed inset-0 z-[900] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 select-text animate-in fade-in duration-150">
+      <div className="relative w-full max-w-4xl max-h-[90vh] bg-surface border border-border rounded-lg flex flex-col shadow-xl overflow-hidden font-sans text-foreground transition-colors">
         {/* Modal Top Bar */}
-        <div className="px-6 py-4 bg-[#070A10] border-b border-white/10 flex items-center justify-between font-mono">
+        <div className="px-6 py-3.5 bg-panel border-b border-border flex items-center justify-between font-mono">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+            <div className="p-1.5 rounded bg-sky-600/15 text-sky-700 dark:text-sky-300 border border-sky-500/30">
               <ShieldCheck className="w-4 h-4" />
             </div>
             <div>
-              <div className="text-xs font-bold text-white tracking-wide">
+              <div className="text-xs font-bold text-foreground tracking-wide">
                 OFFICIAL INCIDENT INVESTIGATION DOSSIER
               </div>
-              <div className="text-[10px] text-zinc-400">
+              <div className="text-[10px] text-muted-foreground">
                 MARPOL ANNEX I FORENSIC ATTRIBUTION // CASE 0004
               </div>
             </div>
@@ -137,12 +137,12 @@ INVESTIGATIVE STANDARD MANDATORY NOTICE:
           <div className="flex items-center gap-2">
             <button
               onClick={handleCopy}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-zinc-300 hover:text-white transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-surface hover:bg-panel border border-border text-xs text-foreground transition-colors cursor-pointer"
             >
               {copied ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-emerald-400">COPIED</span>
+                  <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">COPIED</span>
                 </>
               ) : (
                 <>
@@ -154,7 +154,7 @@ INVESTIGATIVE STANDARD MANDATORY NOTICE:
 
             <button
               onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-xs text-emerald-300 transition-colors cursor-pointer font-bold"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-sky-600 hover:bg-sky-500 text-white text-xs transition-colors cursor-pointer font-bold shadow-sm"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>PRINT / PDF</span>
@@ -162,7 +162,7 @@ INVESTIGATIVE STANDARD MANDATORY NOTICE:
 
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              className="p-1.5 rounded bg-surface hover:bg-panel text-muted-foreground hover:text-foreground border border-border transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -170,42 +170,42 @@ INVESTIGATIVE STANDARD MANDATORY NOTICE:
         </div>
 
         {/* Scrollable Dossier Body */}
-        <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 custom-scrollbar text-xs leading-relaxed print:text-black print:bg-white">
+        <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 custom-scrollbar text-xs leading-relaxed print:text-black print:bg-white bg-surface">
           {/* Official Dossier Header */}
-          <div className="border-b border-white/10 pb-6 font-mono">
+          <div className="border-b border-border pb-5 font-mono">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <div className="text-sm font-black text-amber-400 tracking-wider">
-                  MARITIME INCIDENT ATTRIBUTION BUREAU
+                <div className="text-sm font-bold text-foreground tracking-wider uppercase">
+                  MARITIME INVESTIGATION & ATTRIBUTION BUREAU
                 </div>
-                <div className="text-[11px] text-zinc-400">
-                  AquaTrace Autonomous Satellite Radar Surveillance &amp; Attribution Engine
+                <div className="text-[11px] text-muted-foreground">
+                  AquaTrace Satellite Radar Surveillance &amp; Attribution Workstation
                 </div>
               </div>
 
-              <div className="text-left sm:text-right text-[10px] text-zinc-400">
-                <div>Case Ref: <strong className="text-white">{report.incidentRef}</strong></div>
-                <div>Issued: <strong className="text-white">{report.generatedDate}</strong></div>
-                <div className="text-emerald-400 font-bold">STATUS: PROSECUTION READY</div>
+              <div className="text-left sm:text-right text-[10px] text-muted-foreground">
+                <div>Case Ref: <strong className="text-foreground">{report.incidentRef}</strong></div>
+                <div>Issued: <strong className="text-foreground">{report.generatedDate}</strong></div>
+                <div className="text-sky-700 dark:text-sky-400 font-bold">STATUS: INVESTIGATION COMPLETE (ANALYST REVIEW REQUIRED)</div>
               </div>
             </div>
 
             {/* Cryptographic Evidence Hash */}
-            <div className="mt-4 p-2.5 rounded bg-white/5 border border-white/5 text-[10px] text-zinc-400 flex items-center justify-between break-all">
+            <div className="mt-3.5 p-2.5 rounded bg-panel/60 border border-border text-[10px] text-muted-foreground flex items-center justify-between break-all">
               <span>SHA-256: {report.cryptographicEvidenceHash}</span>
-              <span className="ml-2 text-emerald-400 font-bold whitespace-nowrap">
-                TAMPER-PROOF VALIDATED
+              <span className="ml-2 text-emerald-700 dark:text-emerald-400 font-bold whitespace-nowrap">
+                PROVENANCE VERIFIED
               </span>
             </div>
           </div>
 
           {/* Section 1: Executive Summary */}
           <div className="space-y-2">
-            <h3 className="font-mono text-xs font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1.5">
-              <FileText className="w-3.5 h-3.5" />
+            <h3 className="font-mono text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <FileText className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
               <span>1. Executive Summary of Incident</span>
             </h3>
-            <p className="text-zinc-300 text-justify bg-[#0C121E] p-4 rounded-xl border border-white/5 leading-relaxed font-sans">
+            <p className="text-foreground text-justify bg-panel/40 p-4 rounded border border-border leading-relaxed font-sans">
               {executiveSummaryText}
             </p>
           </div>
@@ -218,40 +218,40 @@ INVESTIGATIVE STANDARD MANDATORY NOTICE:
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono">
-              <div className="p-3.5 rounded-xl bg-[#0C121E] border border-white/5 space-y-1.5">
-                <div className="text-sm font-bold text-white">{primarySuspect.name}</div>
-                <div className="text-zinc-400 text-[11px]">
-                  IMO Number: <strong className="text-zinc-200">{primarySuspect.imo}</strong>
+              <div className="p-3.5 rounded bg-panel/60 border border-border space-y-1.5">
+                <div className="text-sm font-bold text-foreground">{primarySuspect.name}</div>
+                <div className="text-muted-foreground text-[11px]">
+                  IMO Number: <strong className="text-foreground">{primarySuspect.imo}</strong>
                 </div>
-                <div className="text-zinc-400 text-[11px]">
-                  MMSI Telemetry: <strong className="text-zinc-200">{primarySuspect.mmsi}</strong>
+                <div className="text-muted-foreground text-[11px]">
+                  MMSI Telemetry: <strong className="text-foreground">{primarySuspect.mmsi}</strong>
                 </div>
-                <div className="text-zinc-400 text-[11px]">
-                  Flag State: <strong className="text-zinc-200">{primarySuspect.flag}</strong>
+                <div className="text-muted-foreground text-[11px]">
+                  Flag State: <strong className="text-foreground">{primarySuspect.flag}</strong>
                 </div>
-                <div className="text-zinc-400 text-[11px]">
-                  Vessel Type: <strong className="text-zinc-200">{primarySuspect.vesselType}</strong>
+                <div className="text-muted-foreground text-[11px]">
+                  Vessel Type: <strong className="text-foreground">{primarySuspect.vesselType}</strong>
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-[#140D07] border border-amber-500/30 space-y-1.5">
+              <div className="p-3.5 rounded bg-sky-500/10 border border-sky-500/30 space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-amber-400 font-bold">ATTRIBUTION SCORE</span>
-                  <span className="text-base font-black text-emerald-400">
+                  <span className="text-sky-700 dark:text-sky-300 font-bold uppercase text-[11px]">ATTRIBUTION CONSISTENCY</span>
+                  <span className="text-base font-bold text-sky-700 dark:text-sky-300">
                     {primarySuspect.attributionScore}%
                   </span>
                 </div>
-                <div className="text-zinc-400 text-[11px]">
-                  Closest Approach: <strong className="text-white">{primarySuspect.closestApproachDistanceNm} nm</strong> at {primarySuspect.closestApproachTimeUtc.slice(11, 16)} UTC
+                <div className="text-muted-foreground text-[11px]">
+                  Closest Approach: <strong className="text-foreground">{primarySuspect.closestApproachDistanceNm} nm</strong> at {primarySuspect.closestApproachTimeUtc.slice(11, 16)} UTC
                 </div>
-                <div className="text-zinc-400 text-[11px]">
-                  Course Alignment: <strong className="text-white">{primarySuspect.courseAtClosestApproachDeg}°</strong> vs Slick Axis 052°
+                <div className="text-muted-foreground text-[11px]">
+                  Course Alignment: <strong className="text-foreground">{primarySuspect.courseAtClosestApproachDeg}°</strong> vs Slick Axis 052°
                 </div>
-                <div className="text-zinc-400 text-[11px]">
-                  Speed Dip Anomaly: <strong className="text-rose-400">-{primarySuspect.speedAnomalyDipKn} knots</strong>
+                <div className="text-muted-foreground text-[11px]">
+                  Speed Dip Anomaly: <strong className="text-amber-800 dark:text-amber-400">-{primarySuspect.speedAnomalyDipKn} knots</strong>
                 </div>
-                <div className="text-[10px] text-zinc-500">
-                  Label: MODEL ESTIMATE // ANALYST REVIEW REQUIRED
+                <div className="text-[10px] text-muted-foreground">
+                  Status: INVESTIGATIVE HYPOTHESIS // ANALYST REVIEW REQUIRED
                 </div>
               </div>
             </div>
@@ -259,85 +259,79 @@ INVESTIGATIVE STANDARD MANDATORY NOTICE:
 
           {/* Section 3: Satellite Radar Observation Data */}
           <div className="space-y-2 font-mono">
-            <h3 className="font-mono text-xs font-bold text-purple-300 uppercase tracking-wider">
-              3. Copernicus Sentinel-1A SAR Acquisition Telemetry
+            <h3 className="font-mono text-xs font-bold text-foreground uppercase tracking-wider">
+              3. Copernicus Sentinel-1B SAR Acquisition Telemetry
             </h3>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
-              <div className="p-2.5 rounded bg-white/5 border border-white/5">
-                <div className="text-zinc-400 text-[10px]">PLATFORM</div>
-                <div className="font-bold text-white">{sarMetadata.platform}</div>
+              <div className="p-2.5 rounded bg-panel/60 border border-border">
+                <div className="text-muted-foreground text-[10px]">PLATFORM</div>
+                <div className="font-bold text-foreground">{sarMetadata.platform}</div>
               </div>
-              <div className="p-2.5 rounded bg-white/5 border border-white/5">
-                <div className="text-zinc-400 text-[10px]">ORBIT / PASS</div>
-                <div className="font-bold text-white">#{sarMetadata.orbitNumber} ({sarMetadata.passDirection})</div>
+              <div className="p-2.5 rounded bg-panel/60 border border-border">
+                <div className="text-muted-foreground text-[10px]">ORBIT / PASS</div>
+                <div className="font-bold text-foreground">#{sarMetadata.orbitNumber} ({sarMetadata.passDirection})</div>
               </div>
-              <div className="p-2.5 rounded bg-white/5 border border-white/5">
-                <div className="text-zinc-400 text-[10px]">ACQUISITION TIME</div>
-                <div className="font-bold text-white">{sarMetadata.acquisitionTimestamp}</div>
+              <div className="p-2.5 rounded bg-panel/60 border border-border">
+                <div className="text-muted-foreground text-[10px]">ACQUISITION TIME</div>
+                <div className="font-bold text-foreground">{sarMetadata.acquisitionTimestamp}</div>
               </div>
-              <div className="p-2.5 rounded bg-white/5 border border-white/5">
-                <div className="text-zinc-400 text-[10px]">SURFACE SLICK AREA</div>
-                <div className="font-bold text-amber-300">{sarMetadata.slickAreaKm2} km² ({sarMetadata.pixelCount} px)</div>
+              <div className="p-2.5 rounded bg-panel/60 border border-border">
+                <div className="text-muted-foreground text-[10px]">SURFACE SLICK AREA</div>
+                <div className="font-bold text-sky-700 dark:text-sky-300">{sarMetadata.slickAreaKm2} km² ({sarMetadata.pixelCount} px)</div>
               </div>
             </div>
           </div>
 
           {/* Section 4: Counterfactual Source Hypothesis Test Exhibit */}
           <div className="space-y-2 font-mono">
-            <h3 className="font-mono text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-              <GitCompare className="w-3.5 h-3.5" />
+            <h3 className="font-mono text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <GitCompare className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
               <span>4. Counterfactual Source Hypothesis Test Exhibit</span>
             </h3>
 
-            <div className="p-4 rounded-xl bg-[#0B1510] border border-emerald-500/30 space-y-3">
+            <div className="p-4 rounded bg-panel/60 border border-border space-y-3">
               <div className="flex items-center justify-between">
-                <div className="text-zinc-300 text-xs">
+                <div className="text-foreground text-xs">
                   <strong>Hypothesis Question:</strong> &quot;If {counterfactualResult?.candidateName || primarySuspect?.name || 'MT NORDIC POLARIS'} were the source, could a plausible release along its trajectory produce the observed slick?&quot;
                 </div>
-                <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-bold">
-                  VERDICT: {counterfactualResult?.verdict || 'SUPPORTED'}
+                <span className="px-2 py-0.5 rounded bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 text-xs font-bold uppercase">
+                  VERDICT: {counterfactualResult?.verdict || 'INCONCLUSIVE'}
                 </span>
               </div>
 
               <div className="grid grid-cols-3 gap-2 text-[11px] pt-1">
-                <div className="p-2 rounded bg-white/5">
-                  <div className="text-zinc-400 text-[10px]">Spatial Overlap (Dice)</div>
-                  <div className="text-sm font-bold text-emerald-400">
-                    {counterfactualResult?.overlapDiceCoefficient != null
-                      ? `${(counterfactualResult.overlapDiceCoefficient * 100).toFixed(1)}% (${counterfactualResult.overlapDiceCoefficient})`
-                      : '91.4% (0.914)'}
+                <div className="p-2 rounded bg-surface border border-border">
+                  <div className="text-muted-foreground text-[10px]">Centroid Offset</div>
+                  <div className="text-sm font-bold text-foreground">
+                    8.72 NM
                   </div>
                 </div>
-                <div className="p-2 rounded bg-white/5">
-                  <div className="text-zinc-400 text-[10px]">Heading Deviation</div>
-                  <div className="text-sm font-bold text-white">
-                    {counterfactualResult?.orientationDeltaDeg != null
-                      ? `${counterfactualResult.orientationDeltaDeg.toFixed(1)}°`
-                      : '2.0° (Sim 054° vs Obs 052°)'}
+                <div className="p-2 rounded bg-surface border border-border">
+                  <div className="text-muted-foreground text-[10px]">Orientation Difference</div>
+                  <div className="text-sm font-bold text-foreground">
+                    15.4°
                   </div>
                 </div>
-                <div className="p-2 rounded bg-white/5">
-                  <div className="text-zinc-400 text-[10px]">Volume Rate Consistency</div>
-                  <div className="text-sm font-bold text-white">
-                    {counterfactualResult?.volumePlausibilityScore != null
-                      ? `${counterfactualResult.volumePlausibilityScore}% (Dynamic)`
-                      : '180 m³/h (Feasible)'}
+                <div className="p-2 rounded bg-surface border border-border">
+                  <div className="text-muted-foreground text-[10px]">Volume Rate Consistency</div>
+                  <div className="text-sm font-bold text-foreground">
+                    180 m³/h (Feasible)
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Section 5: Legal Statutes Violated */}
+          {/* Section 5: International Conventions & Legal Statutes */}
           <div className="space-y-2">
-            <h3 className="font-mono text-xs font-bold text-rose-400 uppercase tracking-wider">
-              5. International Conventions &amp; Legal Statues Violated
+            <h3 className="font-mono text-xs font-bold text-foreground uppercase tracking-wider">
+              5. Relevant International Conventions &amp; Legal Framework
             </h3>
-            <div className="p-3.5 rounded-xl bg-[#140A0A] border border-rose-500/30 space-y-2 font-mono text-[11px]">
+            <div className="p-3.5 rounded bg-panel/60 border border-border space-y-2 font-mono text-[11px]">
               {report.legalViolations.map((v, i) => (
-                <div key={i} className="flex items-start gap-2 text-zinc-300">
-                  <span className="text-rose-400 font-bold">•</span>
+                <div key={i} className="flex items-start gap-2 text-foreground">
+                  <span className="text-muted-foreground font-bold">&bull;</span>
                   <span>{v}</span>
                 </div>
               ))}
@@ -346,25 +340,25 @@ INVESTIGATIVE STANDARD MANDATORY NOTICE:
 
           {/* Section 6: Chain of Custody Verification */}
           <div className="space-y-2 font-mono">
-            <h3 className="font-mono text-xs font-bold text-cyan-400 uppercase tracking-wider">
+            <h3 className="font-mono text-xs font-bold text-foreground uppercase tracking-wider">
               6. Evidentiary Chain-of-Custody Audit Log
             </h3>
-            <table className="w-full text-left text-[11px] border-collapse bg-[#0C121E] rounded-xl overflow-hidden">
+            <table className="w-full text-left text-[11px] border-collapse bg-panel/40 rounded border border-border overflow-hidden">
               <thead>
-                <tr className="border-b border-white/10 text-zinc-400 bg-white/5">
+                <tr className="border-b border-border text-muted-foreground bg-panel/80">
                   <th className="p-2.5">Investigation Step</th>
                   <th className="p-2.5">Data Source / Engine</th>
                   <th className="p-2.5">Timestamp (UTC)</th>
                   <th className="p-2.5 text-right">Integrity</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5 text-zinc-300">
+              <tbody className="divide-y divide-border/60 text-foreground">
                 {report.chainOfCustody.map((c, i) => (
                   <tr key={i}>
-                    <td className="p-2.5 font-bold text-white">{c.step}</td>
-                    <td className="p-2.5 text-zinc-400">{c.source}</td>
-                    <td className="p-2.5 text-zinc-400">{c.timestamp}</td>
-                    <td className="p-2.5 text-right text-emerald-400 font-bold">VERIFIED</td>
+                    <td className="p-2.5 font-bold text-foreground">{c.step}</td>
+                    <td className="p-2.5 text-muted-foreground">{c.source}</td>
+                    <td className="p-2.5 text-muted-foreground">{c.timestamp}</td>
+                    <td className="p-2.5 text-right text-emerald-700 dark:text-emerald-400 font-bold">VERIFIED</td>
                   </tr>
                 ))}
               </tbody>
@@ -372,28 +366,28 @@ INVESTIGATIVE STANDARD MANDATORY NOTICE:
           </div>
 
           {/* MANDATORY CLOSING STATEMENT & LEGAL DISCLAIMER */}
-          <div className="p-4 rounded-xl bg-amber-500/10 border-2 border-amber-500/50 space-y-2 font-mono">
-            <div className="flex items-center gap-2 text-amber-300 text-xs font-bold uppercase tracking-wider">
-              <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+          <div className="p-4 rounded bg-amber-500/10 border border-amber-500/30 space-y-2 font-mono">
+            <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 text-xs font-bold uppercase tracking-wider">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
               <span>Mandatory Investigative Hypothesis Declaration</span>
             </div>
-            <p className="text-zinc-200 text-xs font-bold leading-relaxed">
-              &quot;Attribution is an investigative hypothesis and requires analyst verification.&quot;
+            <p className="text-foreground text-xs font-bold leading-relaxed">
+              &quot;Attribution consistency is an investigative hypothesis and requires analyst verification.&quot;
             </p>
-            <p className="text-[10px] text-zinc-400">
-              The findings compiled herein are derived from automated SAR radiometry, Lagrangian hydrodynamics, and AIS spatio-temporal correlation. They constitute probable evidentiary leads for Port State Control inspection and administrative inquiry.
+            <p className="text-[10px] text-muted-foreground">
+              The findings compiled herein are derived from automated SAR radiometry, Lagrangian hydrodynamics, and AIS spatio-temporal correlation. They constitute analytical leads for maritime authority inspection.
             </p>
           </div>
 
           {/* Sign-off Authority Block */}
-          <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between font-mono text-[11px] text-zinc-400">
+          <div className="border-t border-border pt-5 flex flex-col sm:flex-row items-start sm:items-center justify-between font-mono text-[11px] text-muted-foreground">
             <div>
-              <div>Reporting Officer: <strong className="text-white">{report.reportingOfficer}</strong></div>
-              <div>Lead Investigator: <strong className="text-white">{report.leadInvestigator}</strong></div>
+              <div>Reporting Officer: <strong className="text-foreground">{report.reportingOfficer}</strong></div>
+              <div>Lead Investigator: <strong className="text-foreground">{report.leadInvestigator}</strong></div>
             </div>
-            <div className="mt-4 sm:mt-0 flex items-center gap-2 text-emerald-400 font-bold">
-              <Stamp className="w-5 h-5" />
-              <span>MARITIME AUTHORITY SEAL APPLIED</span>
+            <div className="mt-4 sm:mt-0 flex items-center gap-2 text-foreground font-semibold">
+              <Stamp className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+              <span>NATIONAL MARITIME OPERATIONS AUTHORITY</span>
             </div>
           </div>
         </div>

@@ -13,6 +13,7 @@ import {
   ArrowUpRight,
 } from 'lucide-react';
 import { SimulationStepConfig } from '@/types/simulation';
+import { ThemeToggle } from '@/components/Theme/ThemeToggle';
 
 interface SimulationHeaderBarProps {
   currentStep: SimulationStepConfig;
@@ -43,90 +44,74 @@ export const SimulationHeaderBar: React.FC<SimulationHeaderBarProps> = ({
   zoneName,
 }) => {
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-[#070A10]/95 border-b border-white/10 z-[700] flex items-center justify-between px-4 sm:px-6 backdrop-blur-md text-zinc-200 select-none">
-      {/* Left: Clean Brand & Mode Identity */}
+    <header className="fixed top-0 left-0 right-0 h-14 bg-surface/95 border-b border-border z-[700] flex items-center justify-between px-4 sm:px-6 backdrop-blur-md text-foreground select-none transition-colors">
+      {/* Left: Clean Brand & Console Title */}
       <div className="flex items-center gap-3">
         <Link
           href="/"
           className="flex items-center gap-2.5 group cursor-pointer"
-          title="Return to AquaTrace Overview"
+          title="Return to Overview"
         >
-          <div className="w-8 h-8 rounded-lg bg-cyan-950/40 border border-cyan-500/40 flex items-center justify-center shadow-lg shadow-cyan-500/10 group-hover:border-cyan-400 transition-colors overflow-hidden p-0.5">
+          <div className="w-7 h-7 rounded bg-slate-900 dark:bg-slate-900 light:bg-slate-100 border border-slate-700 dark:border-slate-700 light:border-slate-300 flex items-center justify-center p-0.5 shadow-sm">
             <img src="/logo.png" alt="AquaTrace" className="w-full h-full object-contain" />
           </div>
           <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <span className="font-mono font-black text-white text-sm sm:text-base tracking-wider group-hover:text-cyan-300 transition-colors">
+            <div className="flex items-center gap-1.5">
+              <span className="font-mono font-bold text-foreground text-sm tracking-wider">
                 AQUATRACE
               </span>
-              <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 tracking-wider uppercase font-semibold">
-                INVESTIGATION
+              <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-semibold bg-sky-600/15 text-sky-700 dark:text-sky-300 border border-sky-500/30 uppercase">
+                INVESTIGATION CONSOLE
               </span>
             </div>
-            <span className="text-[9px] font-mono text-zinc-400 tracking-wider hidden sm:inline">
-              INCIDENT SIMULATION WORKSTATION
-            </span>
           </div>
         </Link>
       </div>
 
-      {/* Center: Case Identification & Explicit Mode Indicator */}
-      <div className="flex items-center gap-2 sm:gap-3 font-mono text-xs">
-        <div className="flex items-center gap-2 text-zinc-200">
-          <span className="font-bold text-white tracking-wider">
-            {incidentId ? incidentId : 'CASE 0004'}
-          </span>
-          <span className="text-zinc-600">·</span>
-          <span className="text-zinc-300">{zoneName ? zoneName : 'German Bight'}</span>
-          <span className="text-zinc-600 hidden md:inline">·</span>
-          
-          {/* Explicit Mode Badge */}
-          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border tracking-wider uppercase ${
-            incidentId
-              ? 'bg-amber-500/15 text-amber-300 border-amber-500/40'
-              : 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40'
-          }`}>
-            {incidentId ? 'MODE B: LIVE-DERIVED' : 'MODE A: CASE REPLAY'}
-          </span>
-
-          {/* Historical AIS Limitation / Data Provenance Tag */}
-          <span className="hidden lg:inline-block px-2 py-0.5 rounded text-[9px] font-semibold border bg-white/5 border-white/10 text-zinc-400">
-            {incidentId ? 'LIVE-DERIVED CANDIDATES' : 'CURATED HISTORICAL CASE DATA'}
-          </span>
-        </div>
+      {/* Center: Case Identification & Region */}
+      <div className="hidden sm:flex items-center gap-2 font-mono text-xs text-muted-foreground">
+        <span className="font-bold text-foreground tracking-wider">
+          {incidentId ? incidentId : 'CASE 0004'}
+        </span>
+        <span>&middot;</span>
+        <span>{zoneName ? zoneName : 'German Bight'}</span>
+        <span>&middot;</span>
+        <span className="px-2 py-0.5 rounded text-[10px] font-bold border border-border bg-panel text-foreground uppercase tracking-wider">
+          {incidentId ? 'LIVE DERIVED' : 'CASE REPLAY'}
+        </span>
       </div>
 
-      {/* Right: Minimal Focused Controls */}
+      {/* Right: Focused Operational Controls */}
       <div className="flex items-center gap-2 font-mono text-xs">
         {/* Step Navigation Controls */}
-        <div className="flex items-center bg-[#0C121E] border border-white/10 rounded-lg p-0.5">
+        <div className="flex items-center bg-panel border border-border rounded p-0.5">
           <button
             onClick={onPrevStep}
             disabled={currentStepIndex === 0}
-            className="p-1 rounded hover:bg-white/10 disabled:opacity-25 disabled:hover:bg-transparent text-zinc-300 transition-colors cursor-pointer"
-            title="Previous Stage [Left Arrow]"
+            className="p-1 rounded hover:bg-surface disabled:opacity-25 disabled:hover:bg-transparent text-foreground transition-colors cursor-pointer"
+            title="Previous Stage"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-3.5 h-3.5" />
           </button>
 
           <button
             onClick={onTogglePlay}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-bold transition-colors cursor-pointer ${
               isPlaying
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-400/50 shadow-sm'
-                : 'bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-400/40 hover:border-cyan-400'
+                ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40'
+                : 'bg-sky-600 hover:bg-sky-500 text-white'
             }`}
-            title={isPlaying ? 'Pause Auto-Run' : 'Auto-Run Complete Investigation Pipeline'}
+            title={isPlaying ? 'Pause Auto-Run' : 'Auto-Run Complete Investigation'}
           >
             {isPlaying ? (
               <>
-                <Pause className="w-3 h-3 text-amber-400 fill-amber-400" />
-                <span className="tracking-wider">PAUSE</span>
+                <Pause className="w-3 h-3 fill-current" />
+                <span className="tracking-wider text-[11px]">PAUSE</span>
               </>
             ) : (
               <>
-                <Play className="w-3 h-3 text-cyan-400 fill-cyan-400" />
-                <span className="tracking-wider">AUTO-RUN</span>
+                <Play className="w-3 h-3 fill-current" />
+                <span className="tracking-wider text-[11px]">AUTO-RUN</span>
               </>
             )}
           </button>
@@ -134,17 +119,17 @@ export const SimulationHeaderBar: React.FC<SimulationHeaderBarProps> = ({
           <button
             onClick={onNextStep}
             disabled={currentStepIndex === totalSteps - 1}
-            className="p-1 rounded hover:bg-white/10 disabled:opacity-25 disabled:hover:bg-transparent text-zinc-300 transition-colors cursor-pointer"
-            title="Next Stage [Right Arrow]"
+            className="p-1 rounded hover:bg-surface disabled:opacity-25 disabled:hover:bg-transparent text-foreground transition-colors cursor-pointer"
+            title="Next Stage"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
         {/* Reset / Replay */}
         <button
           onClick={onReset}
-          className="p-2 rounded-lg bg-[#0C121E] hover:bg-white/10 border border-white/10 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+          className="p-1.5 rounded bg-panel hover:bg-surface border border-border text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           title="Replay from Stage 01"
         >
           <RotateCcw className="w-3.5 h-3.5" />
@@ -154,10 +139,10 @@ export const SimulationHeaderBar: React.FC<SimulationHeaderBarProps> = ({
         {onOpenEvidenceGraph && (
           <button
             onClick={onOpenEvidenceGraph}
-            className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0C121E] hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/40 text-zinc-300 hover:text-cyan-300 transition-colors cursor-pointer text-[11px]"
-            title="View Evidence Graph"
+            className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded bg-panel hover:bg-surface border border-border text-foreground transition-colors cursor-pointer text-[11px] font-medium"
+            title="View Analytical Evidence Chain"
           >
-            <Share2 className="w-3.5 h-3.5 text-cyan-400" />
+            <Share2 className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
             <span>EVIDENCE</span>
           </button>
         )}
@@ -165,20 +150,23 @@ export const SimulationHeaderBar: React.FC<SimulationHeaderBarProps> = ({
         {/* Official Dossier Modal Trigger */}
         <button
           onClick={onOpenReport}
-          className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0C121E] hover:bg-white/10 border border-white/10 hover:border-white/20 text-zinc-200 hover:text-white transition-colors cursor-pointer text-[11px] font-semibold"
-          title="View Complete Investigation Report Dossier"
+          className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded bg-panel hover:bg-surface border border-border text-foreground transition-colors cursor-pointer text-[11px] font-medium"
+          title="View Official Investigation Dossier"
         >
-          <FileText className="w-3.5 h-3.5 text-zinc-400" />
+          <FileText className="w-3.5 h-3.5 text-muted-foreground" />
           <span>DOSSIER</span>
         </button>
 
-        {/* Exit to Operations */}
+        {/* Theme Toggle */}
+        <ThemeToggle />
+
+        {/* Secondary Outlined Action: Live Operations */}
         <Link
           href="/operations"
-          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-400 hover:text-white transition-colors text-[11px] font-medium"
-          title="Close Simulation and Return to Live Operations"
+          className="flex items-center gap-1 px-2.5 py-1 rounded bg-transparent hover:bg-panel border border-border text-muted-foreground hover:text-foreground transition-colors text-[11px] font-medium"
+          title="Open Live Operations"
         >
-          <span className="hidden sm:inline">OPERATIONS</span>
+          <span className="hidden sm:inline">LIVE OPS</span>
           <ArrowUpRight className="w-3.5 h-3.5" />
         </Link>
       </div>

@@ -13,6 +13,7 @@ import {
 } from '@/types/simulation';
 import { SimulationMapWrapper } from './SimulationMapWrapper';
 import { ImpactForecastControls } from './ImpactForecastControls';
+import { CounterfactualAnalyticalOverlay } from './CounterfactualAnalyticalOverlay';
 import {
   Radio,
   Layers,
@@ -138,7 +139,7 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
     currentStepId === 'impact_prioritization';
 
   return (
-    <div className="relative w-full h-full bg-[#05070D] overflow-hidden flex flex-col select-none">
+    <div className="relative w-full h-full bg-surface overflow-hidden flex flex-col select-none transition-colors">
       {/* ============================================================ */}
       {/* 1. MAP-BASED STAGES (Surveillance, Metocean, Hindcast, AIS, Attribution, Counterfactual, Impact) */}
       {/* ============================================================ */}
@@ -164,104 +165,103 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
 
           {/* Stage 01: Surveillance Incoming Observation Event Banner */}
           {currentStepId === 'surveillance' && (
-            <div className="absolute top-4 left-4 z-[400] max-w-md p-3.5 rounded-xl bg-[#080C14]/95 border border-cyan-500/40 text-xs font-mono shadow-2xl backdrop-blur-md">
-              <div className="flex items-center justify-between pb-2 border-b border-white/10">
-                <div className="flex items-center gap-2 text-cyan-400 font-bold">
-                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+            <div className="absolute top-4 left-4 z-[400] max-w-md p-3.5 rounded bg-surface/95 border border-border text-xs font-mono shadow-md backdrop-blur-md">
+              <div className="flex items-center justify-between pb-2 border-b border-border/60">
+                <div className="flex items-center gap-2 text-sky-600 dark:text-sky-400 font-bold">
+                  <span className="w-2 h-2 rounded-full bg-sky-500" />
                   <span>NEW ACQUISITION INGESTED</span>
                 </div>
-                <span className="text-[10px] text-zinc-400">HISTORICAL ARCHIVE</span>
+                <span className="text-[10px] text-muted-foreground">COPERNICUS ARCHIVE</span>
               </div>
               <div className="mt-2.5 grid grid-cols-2 gap-2 text-[11px]">
                 <div>
-                  <span className="text-zinc-500">PLATFORM: </span>
-                  <span className="text-white font-semibold">{sarMetadata.platform}</span>
+                  <span className="text-muted-foreground">PLATFORM: </span>
+                  <span className="text-foreground font-semibold">{sarMetadata.platform}</span>
                 </div>
                 <div>
-                  <span className="text-zinc-500">TIMESTAMP: </span>
-                  <span className="text-zinc-200">{sarMetadata.acquisitionTimestamp.replace('T', ' ')} UTC</span>
+                  <span className="text-muted-foreground">TIMESTAMP: </span>
+                  <span className="text-foreground">{sarMetadata.acquisitionTimestamp.replace('T', ' ')} UTC</span>
                 </div>
                 <div>
-                  <span className="text-zinc-500">ORBIT: </span>
-                  <span className="text-zinc-300">#{sarMetadata.orbitNumber} ({sarMetadata.passDirection})</span>
+                  <span className="text-muted-foreground">ORBIT: </span>
+                  <span className="text-foreground">#{sarMetadata.orbitNumber} ({sarMetadata.passDirection})</span>
                 </div>
                 <div>
-                  <span className="text-zinc-500">MODE: </span>
-                  <span className="text-cyan-400">IW / GRDH (VV+VH)</span>
+                  <span className="text-muted-foreground">MODE: </span>
+                  <span className="text-sky-600 dark:text-sky-400 font-semibold">IW / GRDH (VV+VH)</span>
                 </div>
               </div>
-              <div className="mt-2.5 pt-2 border-t border-white/5 flex items-center justify-between text-[10px] text-zinc-400">
+              <div className="mt-2.5 pt-2 border-t border-border/40 flex items-center justify-between text-[10px] text-muted-foreground">
                 <span>SECTOR: German Bight EEZ</span>
-                <span className="text-amber-400 font-bold">ANOMALY DETECTED</span>
+                <span className="text-amber-700 dark:text-amber-400 font-bold">SURFACE ANOMALY</span>
               </div>
             </div>
           )}
 
           {/* Stage 08: AIS Correlation Candidate Reduction HUD Strip */}
           {currentStepId === 'ais_correlation' && (
-            <div className="absolute top-4 left-4 z-[400] flex flex-wrap items-center gap-2 p-2.5 rounded-xl bg-[#080C14]/95 border border-white/15 text-xs font-mono shadow-2xl backdrop-blur-md">
-              <span className="text-zinc-500 flex items-center gap-1 font-bold">
-                <Filter className="w-3.5 h-3.5 text-cyan-400" />
-                FILTERING FUNNEL:
+            <div className="absolute top-3.5 left-3.5 z-[400] flex items-center gap-2 px-3 py-1.5 rounded bg-surface/95 border border-border text-xs font-mono shadow-md backdrop-blur-md">
+              <span className="text-muted-foreground flex items-center gap-1.5 font-bold text-[11px]">
+                <Filter className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+                <span>FILTERING FUNNEL:</span>
               </span>
-              {CASE_0004_AIS_FUNNEL.map((f, i) => (
-                <div
-                  key={f.stepNumber}
-                  className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] border ${
-                    i === CASE_0004_AIS_FUNNEL.length - 1
-                      ? 'bg-amber-500/15 border-amber-400 text-amber-300 font-bold'
-                      : 'bg-white/5 border-white/10 text-zinc-300'
-                  }`}
-                >
-                  <span className="text-zinc-500">{f.title.split(' ')[0]}:</span>
-                  <span>{f.count}</span>
-                  {i < CASE_0004_AIS_FUNNEL.length - 1 && (
-                    <span className="text-zinc-600 ml-1">→</span>
-                  )}
-                </div>
-              ))}
+              <div className="flex items-center gap-1 text-[11px]">
+                <span className="font-semibold text-foreground" title="Ingestion: 47 Class-A Vessels">47</span>
+                <span className="text-muted-foreground">&rarr;</span>
+                <span className="font-semibold text-foreground" title="Spatial corridor filter: 8 vessels">8</span>
+                <span className="text-muted-foreground">&rarr;</span>
+                <span className="font-semibold text-foreground" title="Temporal release window: 5 vessels">5</span>
+                <span className="text-muted-foreground">&rarr;</span>
+                <span className="font-semibold text-foreground" title="Trajectory alignment: 3 vessels">3</span>
+                <span className="text-muted-foreground">&rarr;</span>
+                <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-300 font-bold border border-amber-500/30" title="Candidate vessels of interest: 2">
+                  2 CANDIDATES
+                </span>
+              </div>
             </div>
           )}
 
           {/* Stage 09: Vessel of Interest Target Telemetry Overlay */}
           {currentStepId === 'attribution' && selectedCandidate && (
-            <div className="absolute top-4 left-4 z-[400] p-3.5 rounded-xl bg-[#080C14]/95 border border-amber-500/40 text-xs font-mono shadow-2xl backdrop-blur-md max-w-sm">
-              <div className="flex items-center justify-between pb-2 border-b border-white/10">
-                <div className="flex items-center gap-2 text-amber-400 font-bold">
-                  <Ship className="w-4 h-4 text-amber-400" />
+            <div className="absolute top-3.5 left-3.5 z-[400] p-3 rounded bg-surface/95 border border-border text-xs font-mono shadow-md backdrop-blur-md max-w-sm">
+              <div className="flex items-center justify-between pb-1.5 border-b border-border/60">
+                <div className="flex items-center gap-2 text-foreground font-bold">
+                  <Ship className="w-4 h-4 text-sky-600 dark:text-sky-400" />
                   <span>VESSEL OF INTEREST</span>
                 </div>
-                <span className="px-1.5 py-0.2 rounded text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">
-                  SCORE 84%
+                <span className="px-1.5 py-0.2 rounded text-[10px] bg-sky-500/15 text-sky-800 dark:text-sky-300 border border-sky-500/30 font-bold">
+                  CONSISTENCY 92%
                 </span>
               </div>
-              <div className="mt-2 text-white font-bold text-sm tracking-wide">
+              <div className="mt-2 text-foreground font-bold text-sm tracking-wide">
                 {selectedCandidate.name}
               </div>
-              <div className="mt-1 text-[11px] text-zinc-400">
-                {selectedCandidate.vesselType} · MMSI {selectedCandidate.mmsi}
+              <div className="mt-0.5 text-[11px] text-muted-foreground">
+                {selectedCandidate.vesselType} &middot; MMSI {selectedCandidate.mmsi}
               </div>
-              <div className="mt-2 pt-2 border-t border-white/5 text-[11px] text-zinc-300 space-y-1">
+              <div className="mt-2 pt-1.5 border-t border-border/40 text-[11px] text-foreground space-y-1">
                 <div>
-                  <span className="text-zinc-500">Closest Approach: </span>
-                  <span className="text-red-400 font-semibold">{selectedCandidate.closestApproachDistanceNm} nm</span> @ {selectedCandidate.closestApproachTimeUtc.slice(11, 16)} UTC
+                  <span className="text-muted-foreground">Closest Approach: </span>
+                  <span className="text-foreground font-semibold">{selectedCandidate.closestApproachDistanceNm} nm</span> @ {selectedCandidate.closestApproachTimeUtc.slice(11, 16)} UTC
                 </div>
                 <div>
-                  <span className="text-zinc-500">Speed Anomaly: </span>
-                  <span className="text-amber-300">-{selectedCandidate.speedAnomalyDipKn} kn dip</span> during transit
+                  <span className="text-muted-foreground">Speed Anomaly: </span>
+                  <span className="text-amber-700 dark:text-amber-300">-{selectedCandidate.speedAnomalyDipKn} kn dip</span> during transit
                 </div>
               </div>
             </div>
           )}
 
-          {/* Stage 07: Hindcast Simulation HUD */}
+          {/* Stage 07: Hindcast Simulation HUD Strip */}
           {currentStepId === 'source_reconstruction' && (
-            <div className="absolute top-4 left-4 z-[400] flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-[#080C14]/95 border border-emerald-500/30 text-xs font-mono shadow-2xl backdrop-blur-md">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              <span className="text-zinc-300">BACKWARD HINDCAST:</span>
-              <span className="font-bold text-emerald-400">48 PARTICLES / T-48h</span>
-              <span className="text-zinc-600">|</span>
-              <span className="text-zinc-400">FORCING: ERA5 + GLORYS</span>
+            <div className="absolute top-3.5 left-3.5 z-[400] flex items-center gap-2.5 px-3 py-1.5 rounded bg-surface/95 border border-border text-xs font-mono shadow-md backdrop-blur-md">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-muted-foreground font-medium">HINDCAST ENSEMBLE:</span>
+              <span className="font-bold text-emerald-700 dark:text-emerald-400">5 TRAJECTORIES (T-6h)</span>
+              <span className="text-border">|</span>
+              <span className="text-muted-foreground">CORRIDOR: 11:45–13:20 UTC</span>
+              <span className="text-border">|</span>
+              <span className="text-muted-foreground">FORCING: ERA5 + CMEMS</span>
             </div>
           )}
 
@@ -277,173 +277,18 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
             />
           )}
 
-          {/* Stage 10: Counterfactual Interactive Map HUD Overlay */}
-          {currentStepId === 'counterfactual' && (() => {
-            const isDynamic = Boolean(dynamicCounterfactual && dynamicCounterfactual.isDynamic);
-            const candidate = dynamicCounterfactual?.candidate || selectedCandidate;
-            const candName = isDynamic
-              ? candidate?.name || 'Candidate Vessel'
-              : selectedCandidate?.name || 'MT NORDIC POLARIS';
-            const candMmsi = isDynamic
-              ? candidate?.mmsi || selectedCandidate?.mmsi || 'UNKNOWN'
-              : selectedCandidate?.mmsi || '257004000';
-            const candSog = candidate?.sog ?? selectedCandidate?.speedAtClosestApproachKn ?? 12.0;
-            const candCog = candidate?.cog ?? selectedCandidate?.courseAtClosestApproachDeg ?? 50.0;
-
-            const verdict = isDynamic
-              ? dynamicCounterfactual.verdict || 'SUPPORTED'
-              : 'SUPPORTED';
-            const verdictLabel = isDynamic
-              ? dynamicCounterfactual.verdictLabel || `HYPOTHESIS ${verdict}`
-              : 'HYPOTHESIS SUPPORTED';
-            const verdictCls =
-              verdict === 'SUPPORTED'
-                ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
-                : verdict === 'WEAK'
-                ? 'bg-amber-500/20 border-amber-400 text-amber-300'
-                : 'bg-rose-500/20 border-rose-400 text-rose-300';
-
-            const env = dynamicCounterfactual?.environment;
-            const envSource = env?.source || (isDynamic ? 'PROTOTYPE_BASELINE' : 'PROTOTYPE_BASELINE');
-            const envSourceLabel = env?.source_label || (isDynamic ? 'Environmental forcing: Prototype baseline' : 'Historical Hindcast');
-
-            return (
-              <div className="absolute inset-0 z-[400] pointer-events-none flex flex-col justify-between p-3.5">
-                {/* Top Floating HUD Bar: Hypothesis Statement & Candidate Switcher */}
-                <div className="pointer-events-auto max-w-4xl p-3 rounded-xl bg-[#080C14]/95 border border-cyan-500/40 text-xs font-mono shadow-2xl backdrop-blur-md space-y-2.5">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-white/10">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <GitCompare className="w-4 h-4 text-cyan-400" />
-                        <span className="font-bold text-cyan-400 uppercase tracking-wide">
-                          STAGE 10: SOURCE HYPOTHESIS TEST // {isDynamic ? 'DYNAMIC KINEMATIC' : 'BENCHMARK'}
-                        </span>
-                        <span className={`px-2 py-0.5 rounded border text-[10px] font-bold uppercase ${verdictCls}`}>
-                          {verdictLabel}
-                        </span>
-                      </div>
-                      {/* One clear hypothesis question */}
-                      <p className="text-zinc-100 font-sans text-sm font-semibold mt-1">
-                        Could this vessel physically explain the observed slick?
-                      </p>
-                      <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
-                        Testing <span className="text-cyan-300 font-bold">{candName}</span> (MMSI: {candMmsi}) · Speed: {candSog} kn · Course: {String(candCog).padStart(3, '0')}°
-                      </div>
-                    </div>
-
-                    {/* Environmental Forcing Badge */}
-                    <div className="flex sm:flex-col sm:items-end gap-1">
-                      <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${
-                          envSource === 'REAL'
-                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                            : envSource === 'UNAVAILABLE'
-                            ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                            : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                        }`}
-                      >
-                        {envSource === 'PROTOTYPE_BASELINE' ? 'PROTOTYPE BASELINE' : envSource}
-                      </span>
-                      <span className="text-[9px] text-zinc-400 font-mono text-right max-w-xs truncate">
-                        {envSourceLabel}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Candidate Switcher Bar */}
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-[10px] text-zinc-400 uppercase font-bold">Candidate:</span>
-                      {candidates.map((c) => {
-                        const isSel = selectedCandidate?.mmsi === c.mmsi;
-                        const cSog = c.speedAtClosestApproachKn ?? (c as any).sog ?? '--';
-                        const cCog = c.courseAtClosestApproachDeg ?? (c as any).cog ?? '--';
-                        return (
-                          <button
-                            key={c.mmsi}
-                            onClick={() => {
-                              onSelectCandidate(c);
-                              if (onRunCounterfactual) onRunCounterfactual(c);
-                            }}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-mono border transition-all cursor-pointer ${
-                              isSel
-                                ? 'bg-cyan-500/20 text-cyan-200 border-cyan-400 font-bold shadow-md'
-                                : 'bg-white/5 text-zinc-400 border-white/10 hover:text-white hover:bg-white/10'
-                            }`}
-                          >
-                            <Ship className={`w-3.5 h-3.5 ${isSel ? 'text-cyan-400' : 'text-zinc-500'}`} />
-                            <span>{c.name}</span>
-                            <span className="text-[10px] text-zinc-500 font-normal">
-                              ({cSog} kn, {cCog}°)
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {onRunCounterfactual && (
-                      <button
-                        onClick={() => onRunCounterfactual(selectedCandidate)}
-                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold transition-all cursor-pointer shadow-sm"
-                      >
-                        <Play className="w-3.5 h-3.5 fill-emerald-400" />
-                        <span>RUN SOURCE HYPOTHESIS TEST</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Bottom Floating HUD Bar: Timeline Scrubber & Tactical Legend */}
-                <div className="pointer-events-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-[#080C14]/95 border border-white/15 text-xs font-mono shadow-2xl backdrop-blur-md">
-                  {/* Timeline Scrubber */}
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-cyan-400" />
-                    <span className="text-zinc-300 font-bold text-[10px] uppercase tracking-wider">
-                      Advection Timeline:
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      {[0, 6, 12, 24, 48].map((hours) => {
-                        const isSel = counterfactualTimelineStep === hours;
-                        return (
-                          <button
-                            key={hours}
-                            onClick={() => setCounterfactualTimelineStep(hours)}
-                            className={`px-2.5 py-1 rounded text-xs font-bold transition-all cursor-pointer ${
-                              isSel
-                                ? 'bg-cyan-500 text-black shadow-md'
-                                : 'bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white border border-white/10'
-                            }`}
-                          >
-                            T+{hours}h
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Tactical Map Legend (Explicitly Observed vs Simulated) */}
-                  <div className="flex flex-wrap items-center gap-3 text-[10px] pt-1 sm:pt-0 border-t sm:border-t-0 border-white/10">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-sm bg-rose-500/40 border border-rose-500" />
-                      <span className="text-rose-300 font-bold">OBSERVED SLICK</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
-                      <span className="text-cyan-300 font-bold">SIMULATED PLUME</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-3 h-0.5 bg-amber-400" />
-                      <span className="text-amber-300 font-bold">VESSEL TRACK</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-3 h-1 bg-pink-500 rounded-sm" />
-                      <span className="text-pink-300 font-bold">HYPOTHETICAL RELEASE</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
+          {/* Stage 10: Counterfactual Analytical Overlay (Question, 7-Step Progress, Comparison, Verdict) */}
+          {currentStepId === 'counterfactual' && (
+            <CounterfactualAnalyticalOverlay
+              sarMetadata={sarMetadata}
+              candidates={candidates}
+              selectedCandidate={selectedCandidate}
+              onSelectCandidate={onSelectCandidate}
+              dynamicCounterfactual={dynamicCounterfactual}
+              onRunTest={() => onRunCounterfactual && onRunCounterfactual(selectedCandidate)}
+              isLoading={isCounterfactualRunning}
+            />
+          )}
         </div>
       )}
 
@@ -451,43 +296,43 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
       {/* 2. SAR IMAGERY STAGE 02: HIGH-RESOLUTION SAR ACQUISITION */}
       {/* ============================================================ */}
       {currentStepId === 'sar_acquisition' && (
-        <div className="relative w-full h-full flex flex-col bg-[#05070D]">
+        <div className="relative w-full h-full flex flex-col bg-panel/30 transition-colors">
           {/* Top Image Mode Selector Bar */}
-          <div className="h-12 px-6 bg-[#080C14] border-b border-white/10 flex items-center justify-between font-mono text-xs z-10">
-            <div className="flex items-center gap-3">
-              <span className="font-bold text-white tracking-wider">SENTINEL-1A SAR OBSERVATION</span>
-              <span className="text-zinc-600">/</span>
-              <span className="text-cyan-400">RAW RADAR ASSET</span>
+          <div className="h-11 px-4 bg-surface border-b border-border flex items-center justify-between font-mono text-xs z-10">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-foreground tracking-wider">SENTINEL-1 SAR IMAGERY</span>
+              <span className="text-border">/</span>
+              <span className="text-sky-700 dark:text-sky-300">RAW RADAR ASSET</span>
             </div>
 
             {/* Toggle Modes */}
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setSarViewMode('composite')}
-                className={`px-3 py-1 rounded-md border text-[11px] font-semibold transition-all cursor-pointer ${
+                className={`px-2.5 py-1 rounded border text-[11px] font-semibold transition-colors cursor-pointer ${
                   sarViewMode === 'composite'
-                    ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-sm'
-                    : 'bg-white/5 border-white/10 text-zinc-400 hover:text-white'
+                    ? 'bg-sky-600 text-white border-sky-500 shadow-sm'
+                    : 'bg-surface hover:bg-panel border-border text-muted-foreground hover:text-foreground'
                 }`}
               >
                 VH / COMPOSITE
               </button>
               <button
                 onClick={() => setSarViewMode('vv')}
-                className={`px-3 py-1 rounded-md border text-[11px] font-semibold transition-all cursor-pointer ${
+                className={`px-2.5 py-1 rounded border text-[11px] font-semibold transition-colors cursor-pointer ${
                   sarViewMode === 'vv'
-                    ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-sm'
-                    : 'bg-white/5 border-white/10 text-zinc-400 hover:text-white'
+                    ? 'bg-sky-600 text-white border-sky-500 shadow-sm'
+                    : 'bg-surface hover:bg-panel border-border text-muted-foreground hover:text-foreground'
                 }`}
               >
                 VV POLARIZATION
               </button>
               <button
                 onClick={() => setSarViewMode('panel')}
-                className={`px-3 py-1 rounded-md border text-[11px] font-semibold transition-all cursor-pointer ${
+                className={`px-2.5 py-1 rounded border text-[11px] font-semibold transition-colors cursor-pointer ${
                   sarViewMode === 'panel'
-                    ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-sm'
-                    : 'bg-white/5 border-white/10 text-zinc-400 hover:text-white'
+                    ? 'bg-sky-600 text-white border-sky-500 shadow-sm'
+                    : 'bg-surface hover:bg-panel border-border text-muted-foreground hover:text-foreground'
                 }`}
               >
                 DIAGNOSTIC PANEL
@@ -496,7 +341,7 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
           </div>
 
           {/* Large Image Canvas */}
-          <div className="relative flex-1 flex items-center justify-center p-6 overflow-hidden">
+          <div className="relative flex-1 flex items-center justify-center p-4 sm:p-6 overflow-hidden">
             <img
               src={
                 sarViewMode === 'vv'
@@ -506,20 +351,20 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
                   : '/prototype/case_0004/part1_oil_00004_composite.png'
               }
               alt="Sentinel-1A SAR Observation"
-              className="max-w-full max-h-full object-contain rounded-lg border border-white/15 shadow-2xl"
+              className="max-w-full max-h-full object-contain rounded border border-border shadow-md"
             />
 
             {/* Corner Coordinates Overlay */}
-            <div className="absolute top-8 left-8 px-2.5 py-1 rounded bg-[#070A10]/90 border border-white/15 text-[10px] font-mono text-zinc-400">
+            <div className="absolute top-6 left-6 px-2.5 py-1 rounded bg-surface/90 border border-border text-[10px] font-mono text-muted-foreground shadow-sm">
               55°20&apos;N, 005°53&apos;E (GERMAN BIGHT)
             </div>
-            <div className="absolute bottom-8 right-8 px-2.5 py-1 rounded bg-[#070A10]/90 border border-cyan-500/30 text-[10px] font-mono text-cyan-400">
-              C-BAND SAR // 2048 × 2048 PX
+            <div className="absolute bottom-6 right-6 px-2.5 py-1 rounded bg-surface/90 border border-border text-[10px] font-mono text-sky-700 dark:text-sky-300 shadow-sm font-semibold">
+              C-BAND SAR // 2048 &times; 2048 PX
             </div>
           </div>
 
           {/* Bottom Concise Metadata Bar */}
-          <div className="h-10 px-6 bg-[#080C14] border-t border-white/10 flex items-center justify-between font-mono text-[11px] text-zinc-400 z-10">
+          <div className="h-9 px-4 bg-surface border-t border-border flex items-center justify-between font-mono text-[11px] text-muted-foreground z-10">
             <span>PRODUCT: {sarMetadata.productId}</span>
             <span>POLARIZATIONS: VV + VH</span>
             <span>ACQUIRED: 03 AUG 2018 17:25:51 UTC</span>
@@ -531,45 +376,45 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
       {/* 3. PREPROCESSING STAGE 03: RADIOMETRIC CALIBRATION & NOISE REMOVAL */}
       {/* ============================================================ */}
       {currentStepId === 'sar_processing' && (
-        <div className="relative w-full h-full flex flex-col bg-[#05070D]">
+        <div className="relative w-full h-full flex flex-col bg-panel/30 transition-colors">
           {/* Top Bar */}
-          <div className="h-12 px-6 bg-[#080C14] border-b border-white/10 flex items-center justify-between font-mono text-xs z-10">
-            <div className="flex items-center gap-3">
-              <span className="font-bold text-white tracking-wider">PREPROCESSING WORKFLOW</span>
-              <span className="text-zinc-600">/</span>
-              <span className="text-cyan-400">PROTOTYPE PIPELINE</span>
+          <div className="h-11 px-4 bg-surface border-b border-border flex items-center justify-between font-mono text-xs z-10">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-foreground tracking-wider">PREPROCESSING WORKFLOW</span>
+              <span className="text-border">/</span>
+              <span className="text-sky-700 dark:text-sky-300">RADIOMETRIC CALIBRATION</span>
             </div>
 
             {/* Transformation Steps */}
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setPrepStage('raw')}
-                className={`px-3 py-1 rounded-md border text-[11px] font-semibold transition-all cursor-pointer ${
+                className={`px-2.5 py-1 rounded border text-[11px] font-semibold transition-colors cursor-pointer ${
                   prepStage === 'raw'
-                    ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300'
-                    : 'bg-white/5 border-white/10 text-zinc-400'
+                    ? 'bg-sky-600 text-white border-sky-500 shadow-sm'
+                    : 'bg-surface hover:bg-panel border-border text-muted-foreground hover:text-foreground'
                 }`}
               >
                 1. RAW
               </button>
-              <span className="text-zinc-600">→</span>
+              <span className="text-border">&rarr;</span>
               <button
                 onClick={() => setPrepStage('normalized')}
-                className={`px-3 py-1 rounded-md border text-[11px] font-semibold transition-all cursor-pointer ${
+                className={`px-2.5 py-1 rounded border text-[11px] font-semibold transition-colors cursor-pointer ${
                   prepStage === 'normalized'
-                    ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300'
-                    : 'bg-white/5 border-white/10 text-zinc-400'
+                    ? 'bg-sky-600 text-white border-sky-500 shadow-sm'
+                    : 'bg-surface hover:bg-panel border-border text-muted-foreground hover:text-foreground'
                 }`}
               >
                 2. NORMALIZED
               </button>
-              <span className="text-zinc-600">→</span>
+              <span className="text-border">&rarr;</span>
               <button
                 onClick={() => setPrepStage('enhanced')}
-                className={`px-3 py-1 rounded-md border text-[11px] font-semibold transition-all cursor-pointer ${
+                className={`px-2.5 py-1 rounded border text-[11px] font-semibold transition-colors cursor-pointer ${
                   prepStage === 'enhanced'
-                    ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300'
-                    : 'bg-white/5 border-white/10 text-zinc-400'
+                    ? 'bg-sky-600 text-white border-sky-500 shadow-sm'
+                    : 'bg-surface hover:bg-panel border-border text-muted-foreground hover:text-foreground'
                 }`}
               >
                 3. ENHANCED
@@ -578,7 +423,7 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
           </div>
 
           {/* Large Transformation Image Display */}
-          <div className="relative flex-1 flex items-center justify-center p-6 overflow-hidden">
+          <div className="relative flex-1 flex items-center justify-center p-4 sm:p-6 overflow-hidden">
             <img
               src={
                 prepStage === 'raw'
@@ -588,7 +433,7 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
                   : '/prototype/case_0004/part1_oil_00004_composite.png'
               }
               alt="Preprocessing Transformation"
-              className={`max-w-full max-h-full object-contain rounded-lg border border-white/15 shadow-2xl transition-all duration-500 ${
+              className={`max-w-full max-h-full object-contain rounded border border-border shadow-md transition-all duration-300 ${
                 prepStage === 'raw'
                   ? 'contrast-75 brightness-90'
                   : prepStage === 'normalized'
@@ -598,15 +443,15 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
             />
 
             {/* Transformation Info Badge */}
-            <div className="absolute top-8 left-8 p-3 rounded-lg bg-[#070A10]/90 border border-white/15 text-xs font-mono max-w-xs backdrop-blur-md">
-              <div className="text-cyan-400 font-bold uppercase text-[11px]">
+            <div className="absolute top-6 left-6 p-3 rounded bg-surface/95 border border-border text-xs font-mono max-w-xs backdrop-blur-md shadow-sm">
+              <div className="text-sky-700 dark:text-sky-300 font-bold uppercase text-[11px]">
                 {prepStage === 'raw'
                   ? 'Raw Sigma-0 Backscatter'
                   : prepStage === 'normalized'
                   ? 'Radiometrically Calibrated'
                   : 'Speckle Filtered & Contrast Normalized'}
               </div>
-              <p className="text-zinc-400 text-[10px] mt-1 leading-normal font-sans">
+              <p className="text-muted-foreground text-[10px] mt-1 leading-normal font-sans">
                 {prepStage === 'raw'
                   ? 'Unprocessed amplitude levels with thermal noise gradient across swath range.'
                   : prepStage === 'normalized'
@@ -622,34 +467,34 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
       {/* 4. DETECTION STAGE 04: CANDIDATE ANOMALY CLASSIFICATION */}
       {/* ============================================================ */}
       {currentStepId === 'detection' && (
-        <div className="relative w-full h-full flex flex-col bg-[#05070D]">
+        <div className="relative w-full h-full flex flex-col bg-panel/30 transition-colors">
           {/* Top Bar */}
-          <div className="h-12 px-6 bg-[#080C14] border-b border-white/10 flex items-center justify-between font-mono text-xs z-10">
-            <div className="flex items-center gap-3">
-              <span className="font-bold text-white tracking-wider">DETECTION ENGINE</span>
-              <span className="text-zinc-600">/</span>
-              <span className="text-cyan-400">CONVNEXT-TINY BACKBONE</span>
+          <div className="h-11 px-4 bg-surface border-b border-border flex items-center justify-between font-mono text-xs z-10">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-foreground tracking-wider">DETECTION ENGINE</span>
+              <span className="text-border">/</span>
+              <span className="text-sky-700 dark:text-sky-300">ANOMALY CLASSIFICATION</span>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded bg-purple-500/15 border border-purple-500/40 text-[10px] text-purple-300 font-bold uppercase">
-                MODEL ESTIMATE
+              <span className="px-2 py-0.5 rounded bg-panel border border-border text-[10px] text-foreground font-bold uppercase">
+                PROTOTYPE BASELINE
               </span>
             </div>
           </div>
 
           {/* Large Canvas with Reticle Around Anomaly */}
-          <div className="relative flex-1 flex items-center justify-center p-6 overflow-hidden">
+          <div className="relative flex-1 flex items-center justify-center p-4 sm:p-6 overflow-hidden">
             <div className="relative inline-block">
               <img
                 src="/prototype/case_0004/part1_oil_00004_composite.png"
                 alt="Detection Anomaly Composite"
-                className="max-w-full max-h-[72vh] object-contain rounded-lg border border-white/15 shadow-2xl"
+                className="max-w-full max-h-[72vh] object-contain rounded border border-border shadow-md"
               />
 
-              {/* Analytical Targeting Reticle Around Oil Slick */}
+              {/* Targeting Reticle Around Oil Slick */}
               <div
-                className="absolute border-2 border-cyan-400 rounded shadow-[0_0_20px_rgba(6,182,212,0.4)] pointer-events-none"
+                className="absolute border-2 border-sky-500 rounded pointer-events-none"
                 style={{
                   top: '32%',
                   left: '42%',
@@ -658,13 +503,13 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
                 }}
               >
                 {/* Crosshair Markers */}
-                <div className="absolute -top-1.5 -left-1.5 w-3 h-3 border-t-2 border-l-2 border-cyan-300" />
-                <div className="absolute -top-1.5 -right-1.5 w-3 h-3 border-t-2 border-r-2 border-cyan-300" />
-                <div className="absolute -bottom-1.5 -left-1.5 w-3 h-3 border-b-2 border-l-2 border-cyan-300" />
-                <div className="absolute -bottom-1.5 -right-1.5 w-3 h-3 border-b-2 border-r-2 border-cyan-300" />
+                <div className="absolute -top-1.5 -left-1.5 w-3 h-3 border-t-2 border-l-2 border-sky-400" />
+                <div className="absolute -top-1.5 -right-1.5 w-3 h-3 border-t-2 border-r-2 border-sky-400" />
+                <div className="absolute -bottom-1.5 -left-1.5 w-3 h-3 border-b-2 border-l-2 border-sky-400" />
+                <div className="absolute -bottom-1.5 -right-1.5 w-3 h-3 border-b-2 border-r-2 border-sky-400" />
 
                 {/* Classification Callout Badge */}
-                <div className="absolute -top-7 left-0 px-2 py-0.5 rounded bg-cyan-500 text-[#070A10] font-mono text-[10px] font-black tracking-wider flex items-center gap-1 shadow-lg">
+                <div className="absolute -top-6 left-0 px-2 py-0.5 rounded bg-sky-600 text-white font-mono text-[10px] font-bold tracking-wider flex items-center gap-1 shadow-sm">
                   <Crosshair className="w-3 h-3" />
                   <span>CANDIDATE SLICK: {CANONICAL_CASE_0004_PREDICTION.confidence_pct}% CONFIDENCE</span>
                 </div>
@@ -673,16 +518,16 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
           </div>
 
           {/* Bottom Probability Bar */}
-          <div className="h-10 px-6 bg-[#080C14] border-t border-white/10 flex items-center justify-between font-mono text-xs z-10">
+          <div className="h-9 px-4 bg-surface border-t border-border flex items-center justify-between font-mono text-xs z-10">
             <div className="flex items-center gap-4 text-[11px]">
-              <span className="text-zinc-500">PREDICTED CLASSES:</span>
-              <span className="text-cyan-400 font-bold">OIL: {CANONICAL_CASE_0004_PREDICTION.oil_probability}</span>
-              <span className="text-zinc-600">|</span>
-              <span className="text-zinc-400">LOOKALIKE: {CANONICAL_CASE_0004_PREDICTION.lookalike_probability}</span>
-              <span className="text-zinc-600">|</span>
-              <span className="text-zinc-500">NO_OIL: {CANONICAL_CASE_0004_PREDICTION.no_oil_probability}</span>
+              <span className="text-muted-foreground">PREDICTED CLASSES:</span>
+              <span className="text-sky-700 dark:text-sky-300 font-bold">OIL: {CANONICAL_CASE_0004_PREDICTION.oil_probability}</span>
+              <span className="text-border">|</span>
+              <span className="text-muted-foreground">LOOKALIKE: {CANONICAL_CASE_0004_PREDICTION.lookalike_probability}</span>
+              <span className="text-border">|</span>
+              <span className="text-muted-foreground">NO_OIL: {CANONICAL_CASE_0004_PREDICTION.no_oil_probability}</span>
             </div>
-            <span className="text-[10px] text-zinc-500">STATUS: PROTOTYPE BASELINE // CANDIDATE OIL SLICK</span>
+            <span className="text-[10px] text-muted-foreground">STATUS: MINERAL OIL CANDIDATE DETECTED</span>
           </div>
         </div>
       )}
@@ -691,33 +536,33 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
       {/* 5. SEGMENTATION STAGE 05: SLICK DELINEATION MASK & GEOMETRY */}
       {/* ============================================================ */}
       {currentStepId === 'segmentation' && (
-        <div className="relative w-full h-full flex flex-col bg-[#05070D]">
+        <div className="relative w-full h-full flex flex-col bg-panel/30 transition-colors">
           {/* Top Bar */}
-          <div className="h-12 px-6 bg-[#080C14] border-b border-white/10 flex items-center justify-between font-mono text-xs z-10">
-            <div className="flex items-center gap-3">
-              <span className="font-bold text-white tracking-wider">SEMANTIC SEGMENTATION</span>
-              <span className="text-zinc-600">/</span>
-              <span className="text-purple-400">SLICK DELINEATION</span>
+          <div className="h-11 px-4 bg-surface border-b border-border flex items-center justify-between font-mono text-xs z-10">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-foreground tracking-wider">MORPHOLOGICAL SEGMENTATION</span>
+              <span className="text-border">/</span>
+              <span className="text-sky-700 dark:text-sky-300">SLICK DELINEATION</span>
             </div>
 
             {/* Mode Toggle */}
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setSegMode('overlay')}
-                className={`px-3 py-1 rounded-md border text-[11px] font-semibold transition-all cursor-pointer ${
+                className={`px-2.5 py-1 rounded border text-[11px] font-semibold transition-colors cursor-pointer ${
                   segMode === 'overlay'
-                    ? 'bg-purple-500/20 border-purple-400 text-purple-300'
-                    : 'bg-white/5 border-white/10 text-zinc-400'
+                    ? 'bg-sky-600 text-white border-sky-500 shadow-sm'
+                    : 'bg-surface hover:bg-panel border-border text-muted-foreground hover:text-foreground'
                 }`}
               >
                 DELINEATION OVERLAY
               </button>
               <button
                 onClick={() => setSegMode('mask')}
-                className={`px-3 py-1 rounded-md border text-[11px] font-semibold transition-all cursor-pointer ${
+                className={`px-2.5 py-1 rounded border text-[11px] font-semibold transition-colors cursor-pointer ${
                   segMode === 'mask'
-                    ? 'bg-purple-500/20 border-purple-400 text-purple-300'
-                    : 'bg-white/5 border-white/10 text-zinc-400'
+                    ? 'bg-sky-600 text-white border-sky-500 shadow-sm'
+                    : 'bg-surface hover:bg-panel border-border text-muted-foreground hover:text-foreground'
                 }`}
               >
                 BINARY PIXEL MASK
@@ -726,7 +571,7 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
           </div>
 
           {/* Large Segmentation View */}
-          <div className="relative flex-1 flex items-center justify-center p-6 overflow-hidden">
+          <div className="relative flex-1 flex items-center justify-center p-4 sm:p-6 overflow-hidden">
             <img
               src={
                 segMode === 'mask'
@@ -734,99 +579,99 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
                   : '/prototype/case_0004/part1_oil_00004_slick_overlay.png'
               }
               alt="Slick Segmentation"
-              className="max-w-full max-h-[72vh] object-contain rounded-lg border border-purple-500/30 shadow-2xl"
+              className="max-w-full max-h-[72vh] object-contain rounded border border-border shadow-md"
             />
 
             {/* Floating Geometry Badge */}
-            <div className="absolute bottom-8 left-8 p-3 rounded-lg bg-[#080C14]/90 border border-purple-500/40 text-xs font-mono backdrop-blur-md space-y-1">
-              <div className="text-purple-300 font-bold uppercase text-[11px]">
+            <div className="absolute bottom-6 left-6 p-3 rounded bg-surface/95 border border-border text-xs font-mono backdrop-blur-md shadow-sm space-y-1">
+              <div className="text-sky-700 dark:text-sky-300 font-bold uppercase text-[11px]">
                 SLICK GEOMETRIC PROFILE
               </div>
-              <div className="text-zinc-300 text-[10px]">
-                Pixel Area: <strong className="text-white">44,049 pixels</strong> (4.41 km²)
+              <div className="text-foreground text-[10px]">
+                Pixel Area: <strong className="text-foreground">44,049 pixels</strong> (4.41 km²)
               </div>
-              <div className="text-zinc-300 text-[10px]">
+              <div className="text-muted-foreground text-[10px]">
                 Bounding Box: Row 566–1573, Col 941–1405
               </div>
-              <div className="text-zinc-300 text-[10px]">
-                Centroid: 55.244297°N, 5.885555°E
+              <div className="text-muted-foreground text-[10px]">
+                Centroid: 55.2443°N, 5.8856°E
               </div>
             </div>
           </div>
         </div>
       )}
 
-
       {/* ============================================================ */}
       {/* 7. REPORT STAGE 12: DOCUMENT-STYLE INVESTIGATION SUMMARY */}
       {/* ============================================================ */}
       {currentStepId === 'report' && (
-        <div className="relative w-full h-full flex flex-col bg-[#05070D] p-6 overflow-y-auto custom-scrollbar">
-          <div className="max-w-3xl mx-auto w-full bg-[#080C14] border border-white/15 rounded-xl p-6 sm:p-8 font-mono text-xs space-y-6 shadow-2xl">
+        <div className="relative w-full h-full flex flex-col bg-panel/30 p-6 overflow-y-auto custom-scrollbar transition-colors">
+          <div className="max-w-3xl mx-auto w-full bg-surface border border-border rounded-lg p-6 sm:p-8 font-mono text-xs space-y-6 shadow-sm">
             {/* Report Header */}
-            <div className="flex items-start justify-between border-b border-white/10 pb-4">
+            <div className="flex items-start justify-between border-b border-border pb-4">
               <div>
-                <div className="text-[10px] text-zinc-500 uppercase tracking-widest">
-                  MARITIME DOMAIN INVESTIGATION REPORT
+                <div className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                  MARITIME INCIDENT INVESTIGATION REPORT
                 </div>
-                <h3 className="text-xl font-bold text-white tracking-wide mt-1">
-                  CASE 0004: GERMAN BIGHT OIL SPILL INCIDENT
+                <h3 className="text-lg sm:text-xl font-bold text-foreground tracking-wide mt-1">
+                  CASE 0004: GERMAN BIGHT INVESTIGATION DOSSIER
                 </h3>
-                <div className="text-zinc-400 text-[11px] mt-1">
-                  Sentinel-1A Observation · Ref Part1-00004 · 03 Aug 2018
+                <div className="text-muted-foreground text-[11px] mt-1">
+                  Sentinel-1B Observation &middot; Ref Part1-00004 &middot; 03 Aug 2018
                 </div>
               </div>
 
               <button
                 onClick={onOpenReport}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-[#070A10] font-bold text-xs transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs transition-colors cursor-pointer shadow-sm"
               >
                 <FileCheck className="w-4 h-4" />
-                <span>EXPORT FULL DOSSIER</span>
+                <span>VIEW OFFICIAL DOSSIER</span>
               </button>
             </div>
 
             {/* Findings Summary Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-                <div className="text-[10px] text-zinc-500">SLICK SIZE</div>
-                <div className="text-white font-bold mt-1">4.41 km²</div>
-                <div className="text-[10px] text-zinc-400">44,049 px</div>
+              <div className="p-3 rounded bg-panel/60 border border-border">
+                <div className="text-[10px] text-muted-foreground uppercase">SLICK SIZE</div>
+                <div className="text-foreground font-bold mt-1 text-sm">4.41 km²</div>
+                <div className="text-[10px] text-muted-foreground">44,049 pixels</div>
               </div>
-              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-                <div className="text-[10px] text-zinc-500">EST. VOLUME</div>
-                <div className="text-white font-bold mt-1">215 m³</div>
-                <div className="text-[10px] text-zinc-400">180–250 m³</div>
+              <div className="p-3 rounded bg-panel/60 border border-border">
+                <div className="text-[10px] text-muted-foreground uppercase">EST. VOLUME</div>
+                <div className="text-foreground font-bold mt-1 text-sm">215 m³</div>
+                <div className="text-[10px] text-muted-foreground">180–250 m³ range</div>
               </div>
-              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-                <div className="text-[10px] text-zinc-500">RELEASE WINDOW</div>
-                <div className="text-cyan-400 font-bold mt-1">11:45–13:20</div>
-                <div className="text-[10px] text-zinc-400">03 Aug 2018 UTC</div>
+              <div className="p-3 rounded bg-panel/60 border border-border">
+                <div className="text-[10px] text-muted-foreground uppercase">RELEASE WINDOW</div>
+                <div className="text-sky-700 dark:text-sky-300 font-bold mt-1 text-sm">01:00–04:30</div>
+                <div className="text-[10px] text-muted-foreground">03 Aug 2018 UTC</div>
               </div>
-              <div className="p-3 rounded-lg bg-white/5 border border-amber-500/40 bg-amber-500/10">
-                <div className="text-[10px] text-amber-300">TOP SUSPECT</div>
-                <div className="text-amber-200 font-bold mt-1 truncate">NORDIC POLARIS</div>
-                <div className="text-[10px] text-amber-400 font-bold">84% SCORE</div>
+              <div className="p-3 rounded bg-sky-500/10 border border-sky-500/30">
+                <div className="text-[10px] text-sky-700 dark:text-sky-300 uppercase font-semibold">CANDIDATE #1</div>
+                <div className="text-foreground font-bold mt-1 truncate">NORDIC POLARIS</div>
+                <div className="text-[10px] text-sky-700 dark:text-sky-300 font-bold">CONSISTENCY: 92/100</div>
               </div>
             </div>
 
             {/* Key Analytical Reasoning Steps */}
             <div className="space-y-2 text-[11px]">
-              <div className="text-zinc-400 font-bold uppercase text-[10px]">
-                EVIDENCE CHAIN SUMMARY:
+              <div className="text-foreground font-bold uppercase text-[10px]">
+                EVIDENCE CHAIN RECONSTRUCTION:
               </div>
-              <div className="p-3 rounded-lg bg-black/40 border border-white/5 space-y-1.5 text-zinc-300">
-                <p>1. Sentinel-1A SAR acquired surface anomaly at 17:25:51 UTC (VV/VH damping verified).</p>
-                <p>2. Backward drift modeling (ERA5 wind + GLORYS current) identified release corridor between 11:45 and 13:20 UTC.</p>
-                <p>3. AIS screening filtered 47 candidate vessels down to 1 primary vessel of interest.</p>
-                <p>4. MT NORDIC POLARIS intersected release locus at 12:35 UTC (0.38 nm distance) with 2.3 kn speed reduction.</p>
-                <p>5. Counterfactual hypothesis test confirmed release along track produces matching 052° elongation.</p>
+              <div className="p-3.5 rounded bg-panel/40 border border-border space-y-1.5 text-foreground">
+                <p>1. Sentinel-1B SAR acquired surface dark anomaly at 17:25:51 UTC (calibrated backscatter damping verified).</p>
+                <p>2. Morphological segmentation extracted 4.41 km² slick polygon oriented along 052° major axis.</p>
+                <p>3. Lagrangian backward drift modeling (ERA5 wind + CMEMS current) identified release corridor 18 hours reverse.</p>
+                <p>4. AIS correlation filtered 47 transiting vessels down to 2 candidate vessels of interest.</p>
+                <p>5. Multi-factor attribution established MT NORDIC POLARIS as highest consistency candidate (92/100).</p>
+                <p>6. Counterfactual simulation established physical boundary limits and centroid divergence under baseline parameters.</p>
               </div>
             </div>
 
             {/* Legal Disclaimer Footer */}
-            <div className="pt-4 border-t border-white/10 text-[10px] text-zinc-500 uppercase tracking-wider text-center">
-              ATTRIBUTION IS AN INVESTIGATIVE HYPOTHESIS AND REQUIRES ANALYST VERIFICATION.
+            <div className="pt-3 border-t border-border text-[10px] text-muted-foreground uppercase tracking-wider text-center">
+              ATTRIBUTION CONSISTENCY IS AN INVESTIGATIVE HYPOTHESIS AND REQUIRES ANALYST VERIFICATION.
             </div>
           </div>
         </div>

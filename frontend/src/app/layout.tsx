@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
+import { ThemeProvider } from '@/context/ThemeContext';
 
 const inter = Inter({
   variable: '--font-inter',
@@ -13,9 +14,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'AquaTrace // Maritime Domain Awareness & Live AIS Tracking',
+  title: 'AquaTrace // Maritime Domain Awareness & Oil Spill Investigation',
   description:
-    'Real-time AIS vessel tracking and maritime domain monitoring platform covering the Indian coastline and Arabian Sea.',
+    'From satellite radar observation to defensible source hypothesis: automated SAR screening, hydrodynamic hindcast, and AIS vessel attribution workstation.',
 };
 
 export default function RootLayout({
@@ -24,9 +25,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-[#070A10] text-zinc-100 min-h-screen`}>
-        {children}
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased min-h-screen transition-colors duration-150`}>
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

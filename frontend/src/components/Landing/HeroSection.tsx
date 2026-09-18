@@ -51,38 +51,45 @@ export const HeroSection: React.FC = () => {
         {/* Main Content Area */}
         <div className="max-w-2xl mt-auto mb-auto pt-12">
           {/* Eyebrow */}
-          <div className="text-[11px] sm:text-xs font-mono font-semibold tracking-[0.25em] text-cyan-400/90 uppercase mb-4 sm:mb-6">
-            MARITIME INCIDENT INVESTIGATION
+          <div className="text-[11px] sm:text-xs font-mono font-semibold tracking-[0.2em] text-sky-400 uppercase mb-4 sm:mb-6">
+            MARITIME INCIDENT INVESTIGATION WORKSTATION
           </div>
 
           {/* Main Headline */}
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white leading-[1.08] uppercase">
-            EVERY SPILL<br />
-            <span className="text-cyan-400 drop-shadow-[0_0_24px_rgba(6,182,212,0.4)]">
-              LEAVES A TRACE.
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-[1.1] uppercase">
+            FROM SATELLITE OBSERVATION<br />
+            <span className="text-sky-300">
+              TO DEFENSIBLE SOURCE HYPOTHESIS.
             </span>
           </h1>
 
           {/* Supporting Statement */}
-          <p className="mt-6 sm:mt-8 text-base sm:text-lg lg:text-xl text-zinc-300 font-light leading-relaxed max-w-xl">
-            AquaTrace combines satellite intelligence, ocean dynamics and vessel movement to reconstruct maritime oil-spill incidents.
+          <p className="mt-6 sm:mt-8 text-base sm:text-lg text-slate-300 font-normal leading-relaxed max-w-xl">
+            AquaTrace connects Copernicus Sentinel-1 SAR imagery, Lagrangian hydrodynamic back-drift, and AIS vessel kinematics into a structured, step-by-step incident investigation workflow.
           </p>
 
-          {/* CTAs */}
-          <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+          {/* Primary Investigation CTA & Secondary Operations Action */}
+          <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5">
+            <Link
+              href="/simulation"
+              className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-mono font-bold text-xs sm:text-sm tracking-wider uppercase transition-colors shadow-md cursor-pointer group"
+            >
+              <span>START INVESTIGATION</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+
             <Link
               href="/operations"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-[#070A10] font-mono font-bold text-xs sm:text-sm tracking-wider uppercase transition-all shadow-[0_0_20px_rgba(6,182,212,0.35)] hover:shadow-[0_0_28px_rgba(6,182,212,0.55)] cursor-pointer group"
+              className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 font-mono text-xs sm:text-sm tracking-wider uppercase transition-colors cursor-pointer"
             >
-              <span>ENTER OPERATIONS</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <span>LIVE OPERATIONS</span>
             </Link>
 
             <a
               href="#satellite-proof"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/15 hover:border-white/30 font-mono font-medium text-xs sm:text-sm tracking-wider uppercase backdrop-blur-sm transition-all cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 px-4 py-3.5 text-slate-400 hover:text-slate-200 font-mono text-xs tracking-wider uppercase transition-colors cursor-pointer"
             >
-              <span>EXPLORE THE SYSTEM</span>
+              <span>EXPLORE WORKFLOW</span>
             </a>
           </div>
         </div>
