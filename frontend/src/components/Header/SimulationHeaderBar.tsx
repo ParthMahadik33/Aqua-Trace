@@ -25,6 +25,8 @@ interface SimulationHeaderBarProps {
   onReset: () => void;
   onOpenReport: () => void;
   onOpenEvidenceGraph?: () => void;
+  incidentId?: string | null;
+  zoneName?: string | null;
 }
 
 export const SimulationHeaderBar: React.FC<SimulationHeaderBarProps> = ({
@@ -37,6 +39,8 @@ export const SimulationHeaderBar: React.FC<SimulationHeaderBarProps> = ({
   onReset,
   onOpenReport,
   onOpenEvidenceGraph,
+  incidentId,
+  zoneName,
 }) => {
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-[#070A10]/95 border-b border-white/10 z-[700] flex items-center justify-between px-4 sm:px-6 backdrop-blur-md text-zinc-200 select-none">
@@ -66,15 +70,28 @@ export const SimulationHeaderBar: React.FC<SimulationHeaderBarProps> = ({
         </Link>
       </div>
 
-      {/* Center: Case Identification & Historical Simulation Note */}
+      {/* Center: Case Identification & Explicit Mode Indicator */}
       <div className="flex items-center gap-2 sm:gap-3 font-mono text-xs">
-        <div className="flex items-center gap-1.5 text-zinc-200">
-          <span className="font-bold text-white tracking-wider">CASE 0004</span>
+        <div className="flex items-center gap-2 text-zinc-200">
+          <span className="font-bold text-white tracking-wider">
+            {incidentId ? incidentId : 'CASE 0004'}
+          </span>
           <span className="text-zinc-600">·</span>
-          <span className="text-zinc-300">German Bight</span>
+          <span className="text-zinc-300">{zoneName ? zoneName : 'German Bight'}</span>
           <span className="text-zinc-600 hidden md:inline">·</span>
-          <span className="text-cyan-400 font-semibold hidden md:inline tracking-wider">
-            SIMULATION MODE
+          
+          {/* Explicit Mode Badge */}
+          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border tracking-wider uppercase ${
+            incidentId
+              ? 'bg-amber-500/15 text-amber-300 border-amber-500/40'
+              : 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40'
+          }`}>
+            {incidentId ? 'MODE B: LIVE-DERIVED' : 'MODE A: CASE REPLAY'}
+          </span>
+
+          {/* Historical AIS Limitation / Data Provenance Tag */}
+          <span className="hidden lg:inline-block px-2 py-0.5 rounded text-[9px] font-semibold border bg-white/5 border-white/10 text-zinc-400">
+            {incidentId ? 'LIVE-DERIVED CANDIDATES' : 'CURATED HISTORICAL CASE DATA'}
           </span>
         </div>
       </div>

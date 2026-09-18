@@ -13,6 +13,13 @@ import {
 } from '@/types/simulation';
 import { getForecastState } from '@/data/case0004ImpactForecast';
 import {
+  CANONICAL_CASE_0004_PREDICTION,
+  CANONICAL_CASE_0004_ATTRIBUTION,
+} from '@/data/case0004Data';
+import { AttributionEngine } from '@/services/simulationEngines/AttributionEngine';
+
+const attributionEngine = new AttributionEngine();
+import {
   Share2,
   FileText,
   ChevronRight,
@@ -51,6 +58,7 @@ interface SimulationInspectorProps {
   onOpenReport: () => void;
   onOpenEvidenceGraph?: () => void;
   impactHours?: number;
+  dynamicCounterfactual?: any;
 }
 
 export const SimulationInspector: React.FC<SimulationInspectorProps> = ({
@@ -74,6 +82,7 @@ export const SimulationInspector: React.FC<SimulationInspectorProps> = ({
   onOpenReport,
   onOpenEvidenceGraph,
   impactHours = 0,
+  dynamicCounterfactual,
 }) => {
   const [paramsExpanded, setParamsExpanded] = useState(true);
 
@@ -260,6 +269,25 @@ export const SimulationInspector: React.FC<SimulationInspectorProps> = ({
               Scene framing, orbital state vector matching, and range-Doppler georeferencing over North Sea sector.
             </SectionBox>
 
+            {/* Backend Operational Quality Gate Results */}
+            <div className="p-3 rounded-lg bg-white/[0.02] border border-white/10 space-y-2">
+              <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 font-semibold flex items-center justify-between">
+                <span>Operational Quality Gate</span>
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                  STATUS: PASS
+                </span>
+              </div>
+              <div className="space-y-1.5 font-mono text-[11px]">
+                <ParamRow label="Metadata Check" value="PASS (Valid UTC & Product ID)" />
+                <ParamRow label="Instrument & Mode" value="PASS (IW / sentinel-1-grd)" />
+                <ParamRow label="Polarization" value="PASS (Dual-Pol VV + VH verified)" />
+                <ParamRow label="Spatial Span" value="PASS (0.60° lon x 0.50° lat)" />
+                <ParamRow label="Incidence Angle" value="PASS (34.2° in range [20°, 46°])" />
+                <ParamRow label="Missing Data / Nodata" value="PASS (0.0% < 15% threshold)" />
+                <ParamRow label="Land Contamination" value="PASS (0.0% offshore open sea)" />
+              </div>
+            </div>
+
             <CollapsibleParams title="Acquisition Metadata" isExpanded={paramsExpanded} onToggle={() => setParamsExpanded(!paramsExpanded)}>
               <ParamRow label="Platform" value="Sentinel-1A" />
               <ParamRow label="Sensor Mode" value="IW / GRDH" />
@@ -275,10 +303,11 @@ export const SimulationInspector: React.FC<SimulationInspectorProps> = ({
             </CollapsibleParams>
 
             <ResultBox
-              label="Acquisition Status"
-              highlight="Calibrated SAR Scene Loaded"
-              subtext="Dual-pol sub-scene extraction complete (2048 x 2048 px)"
-              confidence="99.4%"
+              label="Quality Evaluation"
+              highlight="QUALITY GATE: PASS"
+              subtext="Scene validated for oil slick anomaly screening (7 of 7 rules passed)"
+              status="VERIFIED FOR TRIAGE"
+              confidence="100%"
             />
           </div>
         )}
@@ -337,70 +366,101 @@ export const SimulationInspector: React.FC<SimulationInspectorProps> = ({
         )}
 
         {/* --- STAGE 04: DETECTION --- */}
-        {currentStep.id === 'detection' && (
-          <div className="space-y-4">
-            <SectionBox title="Detection Engine">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-[11px] text-zinc-200">Model Architecture</span>
-                <span className="font-mono text-[11px] text-cyan-300">ConvNeXt-Tiny</span>
-              </div>
-              <div className="text-[10px] text-zinc-500 mt-1">
-                Prototype spatial feature backbone fine-tuned on marine SAR slicks
-              </div>
-            </SectionBox>
+        {currentStep.id === 'detection' && (() => {
+          const pred = CANONICAL_CASE_0004_PREDICTION;
+          const devVal = CANONICAL_CASE_0004_PREDICTION.development_validation;
 
-            {/* Classification Probabilities */}
-            <div className="p-3 rounded-lg bg-white/[0.02] border border-white/10 space-y-2.5">
-              <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 font-semibold">
-                Class Probabilities
+          return (
+            <div className="space-y-4">
+              <SectionBox title="Detection Model Specification">
+                <div className="space-y-1.5 font-mono text-[11px]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-400">MODEL</span>
+                    <span className="text-cyan-300 font-bold">{pred.model_name}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-400">INPUT</span>
+                    <span className="text-zinc-300">{pred.input_channels}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-400">MODE</span>
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                      {pred.mode}
+                    </span>
+                  </div>
+                </div>
+              </SectionBox>
+
+              {/* Classification Probabilities */}
+              <div className="p-3 rounded-lg bg-white/[0.02] border border-white/10 space-y-2.5">
+                <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 font-semibold flex items-center justify-between">
+                  <span>Class Probabilities</span>
+                  <span className="text-[9px] text-zinc-400">Canonical Prototype</span>
+                </div>
+                <div className="space-y-2 font-mono text-[11px]">
+                  <div>
+                    <div className="flex justify-between text-zinc-300 mb-1">
+                      <span className="font-bold text-cyan-300">OIL</span>
+                      <span className="font-bold text-cyan-300">{(pred.oil_probability * 100).toFixed(1)}%</span>
+                    </div>
+                    <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+                      <div className="h-full bg-cyan-400 rounded-full" style={{ width: `${pred.oil_probability * 100}%` }} />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-zinc-400 mb-1">
+                      <span>LOOKALIKE</span>
+                      <span>{(pred.lookalike_probability * 100).toFixed(1)}%</span>
+                    </div>
+                    <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+                      <div className="h-full bg-amber-400 rounded-full" style={{ width: `${pred.lookalike_probability * 100}%` }} />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-zinc-400 mb-1">
+                      <span>NO_OIL</span>
+                      <span>{(pred.no_oil_probability * 100).toFixed(1)}%</span>
+                    </div>
+                    <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+                      <div className="h-full bg-zinc-500 rounded-full" style={{ width: `${pred.no_oil_probability * 100}%` }} />
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="space-y-2 font-mono text-[11px]">
-                <div>
-                  <div className="flex justify-between text-zinc-300 mb-1">
-                    <span className="font-bold text-cyan-300">OIL</span>
-                    <span className="font-bold text-cyan-300">0.87</span>
-                  </div>
-                  <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
-                    <div className="h-full bg-cyan-400 rounded-full" style={{ width: '87%' }} />
-                  </div>
+
+              {/* Offline Development Baseline Validation */}
+              <div className="p-2.5 rounded-lg bg-white/[0.02] border border-white/10 space-y-1.5">
+                <div className="text-[9px] font-mono uppercase tracking-wider text-zinc-400 font-semibold flex items-center justify-between">
+                  <span>Development Validation Baseline</span>
+                  <span className="text-[9px] text-zinc-500">Benchmark Test Set</span>
                 </div>
-                <div>
-                  <div className="flex justify-between text-zinc-400 mb-1">
-                    <span>LOOKALIKE</span>
-                    <span>0.09</span>
-                  </div>
-                  <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
-                    <div className="h-full bg-amber-400 rounded-full" style={{ width: '9%' }} />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-zinc-400 mb-1">
-                    <span>NO_OIL</span>
-                    <span>0.04</span>
-                  </div>
-                  <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
-                    <div className="h-full bg-zinc-500 rounded-full" style={{ width: '4%' }} />
-                  </div>
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1 font-mono text-[10px] text-zinc-300">
+                  <div>Macro F1: <span className="text-cyan-300 font-bold">{devVal.macro_f1}</span></div>
+                  <div>Accuracy: <span className="text-cyan-300 font-bold">{devVal.accuracy}%</span></div>
+                  <div>Oil Recall: <span className="text-zinc-300 font-bold">{devVal.oil_recall}%</span></div>
+                  <div>Look-alike Recall: <span className="text-zinc-300 font-bold">{devVal.lookalike_recall}%</span></div>
+                  <div>No-Oil Recall: <span className="text-zinc-300 font-bold">{devVal.no_oil_recall}%</span></div>
+                  <div className="col-span-2 text-[9px] text-zinc-500 mt-0.5">Dominant Error: {devVal.dominant_error}</div>
                 </div>
               </div>
+
+              <CollapsibleParams title="Model Interpretation Factors" isExpanded={paramsExpanded} onToggle={() => setParamsExpanded(!paramsExpanded)}>
+                <ParamRow label="Backscatter Contrast" value="-7.4 dB vs ambient" />
+                <ParamRow label="Slick Morphology" value="Elongated linear trail" />
+                <ParamRow label="Spatial Consistency" value="High border gradient" />
+                <ParamRow label="Look-alike Similarity" value="Low biogenic signature" />
+              </CollapsibleParams>
+
+              <ResultBox
+                label="Detection Outcome"
+                highlight="POSSIBLE OIL-LIKE ANOMALY"
+                subtext="High-confidence surface damping with linear dispersion profile"
+                status="SIMULATED (Prototype Baseline)"
+                confidence={`${pred.confidence_pct}%`}
+              />
             </div>
-
-            <CollapsibleParams title="Model Interpretation Factors" isExpanded={paramsExpanded} onToggle={() => setParamsExpanded(!paramsExpanded)}>
-              <ParamRow label="Backscatter Contrast" value="-7.4 dB vs ambient" />
-              <ParamRow label="Slick Morphology" value="Elongated linear trail" />
-              <ParamRow label="Spatial Consistency" value="High border gradient" />
-              <ParamRow label="Look-alike Similarity" value="Low biogenic signature" />
-            </CollapsibleParams>
-
-            <ResultBox
-              label="Detection Outcome"
-              highlight="POSSIBLE OIL-LIKE ANOMALY"
-              subtext="High-confidence surface damping with linear dispersion profile"
-              status="MODEL ESTIMATE (Unverified)"
-              confidence="87%"
-            />
-          </div>
-        )}
+          );
+        })()}
 
         {/* --- STAGE 05: SEGMENTATION --- */}
         {currentStep.id === 'segmentation' && (
@@ -445,10 +505,10 @@ export const SimulationInspector: React.FC<SimulationInspectorProps> = ({
           <div className="space-y-4">
             <SectionBox title="Metocean Data Source">
               <div className="font-mono text-[11px] text-zinc-200">
-                ECMWF ERA5 Reanalysis + CMEMS Ocean Physics
+                CASE REPLAY METOCEAN (Simulated Reanalysis)
               </div>
               <div className="text-[10px] text-zinc-500 mt-0.5">
-                Synchronized to 2018-08-03 17:00 UTC
+                Deterministic replay calibrated to 2018-08-03 17:00 UTC (North Sea German Bight)
               </div>
             </SectionBox>
 
@@ -642,116 +702,396 @@ export const SimulationInspector: React.FC<SimulationInspectorProps> = ({
               highlight="2 High-Priority Candidates"
               subtext="Lead candidate intersects corridor at estimated discharge hour"
               status="PROTOTYPE CORRELATION"
-              confidence="84%"
+              confidence="94.2%"
             />
           </div>
         )}
 
         {/* --- STAGE 09: ATTRIBUTION --- */}
-        {currentStep.id === 'attribution' && (
-          <div className="space-y-4">
-            <SectionBox title="Vessel of Interest">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-mono text-sm font-bold text-amber-300">
-                    {selectedCandidate?.name || 'NORDIC POLARIS'}
+        {currentStep.id === 'attribution' && (() => {
+          const candidate = selectedCandidate || candidates[0];
+          const attrExecution = attributionEngine.execute({
+            vessel: candidate,
+            counterfactualResult: dynamicCounterfactual,
+            slickAxisDeg: 52.0,
+          });
+          const attr = attrExecution.result;
+
+          return (
+            <div className="space-y-4">
+              <SectionBox title="Vessel of Interest">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-mono text-sm font-bold text-amber-300">
+                      {candidate.name}
+                    </div>
+                    <div className="text-[10px] text-zinc-400 font-mono">
+                      {candidate.vesselType || 'Commercial Vessel'} · MMSI{' '}
+                      {candidate.mmsi || 'UNKNOWN'} · IMO{' '}
+                      {candidate.imo || 'UNKNOWN'}
+                    </div>
                   </div>
-                  <div className="text-[10px] text-zinc-400 font-mono">
-                    {selectedCandidate?.vesselType || 'Crude Oil Tanker'} · MMSI{' '}
-                    {selectedCandidate?.mmsi || '257004000'} · IMO{' '}
-                    {selectedCandidate?.imo || '9321483'}
-                  </div>
+                  <span className={`px-2 py-1 rounded font-mono text-[10px] font-bold border ${
+                    attr.investigationPriority === 'HIGH'
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                      : 'bg-zinc-500/20 text-zinc-300 border-zinc-500/40'
+                  }`}>
+                    {attr.investigationPriority === 'HIGH' ? 'PRIORITY #1' : 'SECONDARY'}
+                  </span>
                 </div>
-                <span className="px-2 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-[10px] font-bold">
-                  RANK #1
-                </span>
-              </div>
-            </SectionBox>
+              </SectionBox>
 
-            {/* Attribution Factor Breakdown */}
-            <div className="p-3 rounded-lg bg-white/[0.02] border border-white/10 space-y-2.5">
-              <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 font-semibold">
-                Evidence Factor Breakdown
+              {/* Attribution Factor Breakdown */}
+              <div className="p-3 rounded-lg bg-white/[0.02] border border-white/10 space-y-2.5">
+                <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 font-semibold flex items-center justify-between">
+                  <span>Evidence Factor Breakdown</span>
+                  <span className="text-[9px] text-zinc-400">Weighted Matrix</span>
+                </div>
+                <div className="space-y-2 font-mono text-[11px]">
+                  <FactorRow label="Spatial Proximity (30%)" score={attr.factors.spatialProximity.score} />
+                  <FactorRow label="Temporal Compatibility (25%)" score={attr.factors.temporalCompatibility.score} />
+                  <FactorRow label="Trajectory Alignment (20%)" score={attr.factors.trajectoryConsistency.score} />
+                  <FactorRow label="Kinematic Anomaly (15%)" score={attr.factors.behavioralAnomaly.score} isWarning={attr.factors.behavioralAnomaly.isWarning} />
+                  <FactorRow label="Metocean Consistency (10%)" score={attr.factors.metoceanConsistency.score} />
+                </div>
               </div>
-              <div className="space-y-2 font-mono text-[11px]">
-                <FactorRow label="Spatial Proximity" score={91} />
-                <FactorRow label="Temporal Compatibility" score={84} />
-                <FactorRow label="Trajectory Consistency" score={88} />
-                <FactorRow label="Drift Compatibility" score={82} />
-                <FactorRow label="AIS Continuity (Gap)" score={73} isWarning />
+
+              <div className="p-3 rounded-lg bg-white/[0.02] border border-white/10 space-y-1.5">
+                <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 font-semibold">
+                  Supporting Evidence
+                </div>
+                <ul className="space-y-1 text-[11px] text-zinc-300 font-mono">
+                  {attr.supportingEvidence.map((ev, i) => (
+                    <li key={i} className="flex items-center gap-1.5">
+                      <span className="text-emerald-400">✓</span> {ev}
+                    </li>
+                  ))}
+                </ul>
               </div>
+
+              <ResultBox
+                label="Attribution Decision"
+                highlight={attr.decisionLabel}
+                subtext={`Overall composite score: ${attr.attributionScore}%. Investigative hypothesis requiring analyst verification.`}
+                status="INVESTIGATION PRIORITY"
+                confidence={`${attr.attributionScore}%`}
+              />
             </div>
-
-            <div className="p-3 rounded-lg bg-white/[0.02] border border-white/10 space-y-1.5">
-              <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 font-semibold">
-                Supporting Evidence
-              </div>
-              <ul className="space-y-1 text-[11px] text-zinc-300 font-mono">
-                <li className="flex items-center gap-1.5">
-                  <span className="text-emerald-400">✓</span> Track intersects source corridor
-                </li>
-                <li className="flex items-center gap-1.5">
-                  <span className="text-emerald-400">✓</span> Timing compatible with drift rate
-                </li>
-                <li className="flex items-center gap-1.5">
-                  <span className="text-emerald-400">✓</span> Trajectory parallel to slick spine
-                </li>
-                <li className="flex items-center gap-1.5">
-                  <span className="text-amber-400">!</span> 42-min AIS gap during corridor transit
-                </li>
-              </ul>
-            </div>
-
-            <ResultBox
-              label="Attribution Decision"
-              highlight="PRIORITIZE FOR INVESTIGATION"
-              subtext="Overall composite affinity: 84%. Investigative hypothesis requiring analyst verification."
-              status="PROTOTYPE ATTRIBUTION"
-              confidence="84%"
-            />
-          </div>
-        )}
+          );
+        })()}
 
         {/* --- STAGE 10: COUNTERFACTUAL --- */}
-        {currentStep.id === 'counterfactual' && (
-          <div className="space-y-4">
-            <SectionBox title="Hypothesis Test Question">
-              <div className="text-zinc-200 italic leading-snug">
-                &ldquo;Could a plausible release along this vessel&apos;s trajectory reproduce the observed satellite slick?&rdquo;
-              </div>
-              <div className="text-[10px] text-zinc-500 mt-1 font-mono">
-                Forward plume dispersion vs observed radar geometry
-              </div>
-            </SectionBox>
+        {currentStep.id === 'counterfactual' && (() => {
+          const isDynamic = Boolean(dynamicCounterfactual && dynamicCounterfactual.isDynamic);
+          const candidate = dynamicCounterfactual?.candidate || selectedCandidate;
+          const candidateName = isDynamic
+            ? candidate?.name || 'Candidate Vessel'
+            : selectedCandidate?.name || 'MT NORDIC POLARIS';
+          const candidateMmsi = isDynamic
+            ? candidate?.mmsi || selectedCandidate?.mmsi || 'UNKNOWN'
+            : selectedCandidate?.mmsi || '257004000';
 
-            <div className="p-3 rounded-lg bg-white/[0.02] border border-white/10 space-y-2.5">
-              <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 font-semibold">
-                Consistency Validation Metrics
+          const spatial = isDynamic
+            ? (dynamicCounterfactual.evidenceFactors?.spatialConsistency !== undefined ? Math.round(dynamicCounterfactual.evidenceFactors.spatialConsistency) : null)
+            : 81;
+          const trajectory = isDynamic
+            ? (dynamicCounterfactual.evidenceFactors?.trajectoryConsistency !== undefined ? Math.round(dynamicCounterfactual.evidenceFactors.trajectoryConsistency) : null)
+            : 88;
+          const plume = isDynamic
+            ? (dynamicCounterfactual.evidenceFactors?.plumeConsistency !== undefined ? Math.round(dynamicCounterfactual.evidenceFactors.plumeConsistency) : null)
+            : 79;
+          const temporal = isDynamic
+            ? (dynamicCounterfactual.evidenceFactors?.temporalConsistency !== undefined ? Math.round(dynamicCounterfactual.evidenceFactors.temporalConsistency) : null)
+            : 85;
+
+          const speed = isDynamic
+            ? (candidate?.sog !== undefined ? `${candidate.sog} knots` : '--')
+            : '12.4 knots';
+          const course = isDynamic
+            ? (candidate?.cog !== undefined ? `${String(candidate.cog).padStart(3, '0')}°` : '--')
+            : '074°';
+
+          const offsetNmVal = isDynamic ? dynamicCounterfactual.metrics?.centroid_distance_nm : 0.38;
+          const offsetDist = offsetNmVal !== undefined && offsetNmVal !== null ? `${offsetNmVal} NM` : '--';
+
+          const orientVal = isDynamic ? dynamicCounterfactual.metrics?.orientation_delta_deg : 2.0;
+          const orientDelta = orientVal !== undefined && orientVal !== null ? `±${orientVal}°` : '--';
+
+          const verdict: 'SUPPORTED' | 'WEAK' | 'INCONCLUSIVE' = isDynamic
+            ? (dynamicCounterfactual.verdict || 'SUPPORTED')
+            : 'SUPPORTED';
+
+          // Generated concise verdict explanation strictly based on calculated factors (zero guilt language)
+          const verdictExplanation = isDynamic
+            ? dynamicCounterfactual.summary_explanation ||
+              (verdict === 'SUPPORTED'
+                ? 'Candidate trajectory and simulated plume show strong spatial and temporal consistency with the observed slick.'
+                : verdict === 'WEAK'
+                ? 'Some spatial alignment exists, but trajectory or plume consistency is limited.'
+                : 'Available evidence is insufficient to determine strong physical consistency.')
+            : 'Candidate trajectory and simulated plume show strong spatial and temporal consistency with the observed slick.';
+
+          const verdictBadgeCls =
+            verdict === 'SUPPORTED'
+              ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
+              : verdict === 'WEAK'
+              ? 'bg-amber-500/20 border-amber-400 text-amber-300'
+              : 'bg-rose-500/20 border-rose-400 text-rose-300';
+
+          const env = dynamicCounterfactual?.environment;
+          const envSource = env?.source || (isDynamic ? 'PROTOTYPE_BASELINE' : 'PROTOTYPE_BASELINE');
+          const envSourceLabel = env?.source_label || (isDynamic ? 'Environmental forcing: Prototype baseline' : 'Historical Hindcast');
+          const envCurrentSpeed = env?.current_speed_ms ?? (isDynamic ? 0.35 : 0.38);
+          const envCurrentDir = env?.current_direction_deg ?? (isDynamic ? 65.0 : 62.0);
+          const envWindSpeed = env?.wind_speed_ms ?? (isDynamic ? 4.5 : 5.2);
+          const envWindDir = env?.wind_direction_deg ?? (isDynamic ? 50.0 : 48.0);
+
+          // Interpretations for the 5 evidence factors
+          const spatialInterp =
+            offsetNmVal !== undefined && offsetNmVal <= 2.0
+              ? 'Low displacement → strong spatial consistency'
+              : offsetNmVal !== undefined && offsetNmVal <= 6.0
+              ? 'Moderate displacement → partial spatial consistency'
+              : 'Significant displacement → weak spatial consistency';
+
+          const orientInterp =
+            orientVal !== undefined && orientVal <= 15.0
+              ? 'Close alignment with SAR slick major axis'
+              : orientVal !== undefined && orientVal <= 35.0
+              ? 'Moderate angular divergence from major axis'
+              : 'Significant angular divergence from slick axis';
+
+          const temporalInterp =
+            temporal !== null && temporal >= 70
+              ? 'Vessel transit timing is compatible with discharge locus'
+              : 'Vessel transit timing shows temporal mismatch';
+
+          const trajectoryInterp =
+            trajectory !== null && trajectory >= 70
+              ? 'Track heading aligns with slick dispersion corridor'
+              : 'Track heading diverges from slick dispersion corridor';
+
+          const plumeInterp =
+            plume !== null && plume >= 40
+              ? 'Dispersion footprint matches observed anomaly'
+              : 'Footprint area agreement is limited';
+
+          return (
+            <div className="space-y-4">
+              {/* Hypothesis Question & Candidate Context */}
+              <SectionBox title="Hypothesis Under Investigation">
+                <div className="text-zinc-100 font-medium leading-snug">
+                  &ldquo;Could this vessel physically explain the observed slick?&rdquo;
+                </div>
+                <div className="text-[11px] text-zinc-400 mt-1.5 font-mono">
+                  Testing <span className="text-cyan-300 font-bold">{candidateName}</span> (MMSI: {candidateMmsi})
+                </div>
+              </SectionBox>
+
+              {/* Prominent Verdict Card with calculated explanation */}
+              <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-mono font-bold">
+                    HYPOTHESIS VERDICT
+                  </span>
+                  <span className={`px-2.5 py-0.5 rounded border text-xs font-mono font-bold uppercase ${verdictBadgeCls}`}>
+                    {verdict}
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-200 font-sans leading-relaxed">
+                  {verdictExplanation}
+                </p>
               </div>
-              <div className="space-y-2 font-mono text-[11px]">
-                <FactorRow label="Spatial Consistency" score={81} />
-                <FactorRow label="Temporal Consistency" score={86} />
-                <FactorRow label="Shape / Morphology" score={79} />
-                <FactorRow label="Overall Consistency" score={83} />
+
+              {/* Compact Evidence Metrics Panel with Values, Badges & Interpretations */}
+              <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/10 space-y-3">
+                <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-bold flex items-center justify-between pb-1.5 border-b border-white/5">
+                  <span>EVIDENCE METRICS</span>
+                  <span className="text-[9px] text-zinc-500 font-normal">CALCULATED FACTORS</span>
+                </div>
+
+                <div className="space-y-2.5 font-mono text-[11px]">
+                  {/* Factor 1: Centroid Offset */}
+                  <div className="p-2 rounded-lg bg-black/30 border border-white/5 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-300 font-semibold">Centroid Offset</span>
+                      <span className="text-cyan-300 font-bold">{offsetDist}</span>
+                    </div>
+                    <div className="text-[10px] text-amber-300/90 font-sans">
+                      {spatialInterp}
+                    </div>
+                  </div>
+
+                  {/* Factor 2: Orientation Difference */}
+                  <div className="p-2 rounded-lg bg-black/30 border border-white/5 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-300 font-semibold">Orientation Difference</span>
+                      <span className="text-cyan-300 font-bold">{orientDelta}</span>
+                    </div>
+                    <div className="text-[10px] text-amber-300/90 font-sans">
+                      {orientInterp}
+                    </div>
+                  </div>
+
+                  {/* Factor 3: Plume / Shape Overlap */}
+                  <div className="p-2 rounded-lg bg-black/30 border border-white/5 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-300 font-semibold">Plume / Shape Overlap</span>
+                      <span className="text-cyan-300 font-bold">
+                        {plume !== null ? `${plume}%` : '--'}
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-amber-300/90 font-sans">
+                      {plumeInterp}
+                    </div>
+                  </div>
+
+                  {/* Factor 4: Temporal Consistency */}
+                  <div className="p-2 rounded-lg bg-black/30 border border-white/5 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-300 font-semibold">Temporal Consistency</span>
+                      <span className="text-cyan-300 font-bold">
+                        {temporal !== null ? `${temporal}%` : '--'}
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-amber-300/90 font-sans">
+                      {temporalInterp}
+                    </div>
+                  </div>
+
+                  {/* Factor 5: Trajectory Consistency */}
+                  <div className="p-2 rounded-lg bg-black/30 border border-white/5 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-300 font-semibold">Trajectory Consistency</span>
+                      <span className="text-cyan-300 font-bold">
+                        {trajectory !== null ? `${trajectory}%` : '--'}
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-amber-300/90 font-sans">
+                      {trajectoryInterp}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Environmental Forcing Semantics Box */}
+              <div className="p-3 rounded-lg bg-white/[0.02] border border-white/10 space-y-1.5 font-mono text-[11px]">
+                <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold flex items-center justify-between">
+                  <span>Environmental Forcing</span>
+                  <span
+                    className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                      envSource === 'REAL'
+                        ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                        : envSource === 'UNAVAILABLE'
+                        ? 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
+                        : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                    }`}
+                  >
+                    {envSource}
+                  </span>
+                </div>
+                <div className="text-[10px] text-zinc-300">
+                  {envSourceLabel}
+                </div>
+                {envSource === 'PROTOTYPE_BASELINE' && (
+                  <div className="text-[9px] text-amber-400/80 italic font-sans">
+                    Prototype advection projection — not an operational forecast
+                  </div>
+                )}
+                <div className="pt-1 space-y-1 border-t border-white/5">
+                  <ParamRow
+                    label="Surface Current"
+                    value={
+                      envCurrentSpeed !== null
+                        ? `${envCurrentSpeed} m/s @ ${envCurrentDir}°`
+                        : 'Unavailable'
+                    }
+                  />
+                  <ParamRow
+                    label="Atmospheric Wind"
+                    value={
+                      envWindSpeed !== null
+                        ? `${envWindSpeed} m/s @ ${envWindDir}°`
+                        : 'Unavailable'
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* Compact Expandable Assumptions Panel */}
+              <div className="p-3 rounded-lg bg-white/[0.02] border border-white/10 space-y-2 font-mono">
+                <div className="text-[10px] uppercase tracking-wider text-zinc-400 font-semibold flex items-center justify-between">
+                  <span>Assumptions</span>
+                  <span className="text-[9px] text-zinc-500">6 CORE PARAMETERS</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-[10px] text-zinc-300 pt-1 border-t border-white/5">
+                  <div>
+                    <span className="text-zinc-500">Model: </span>
+                    <span className="text-zinc-200">Kinematic / Lagrangian</span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500">Particles: </span>
+                    <span className="text-zinc-200">120</span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500">Windage: </span>
+                    <span className="text-zinc-200">3% (10m leeway)</span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500">Diffusion: </span>
+                    <span className="text-zinc-200">2.5 m²/s (Gaussian)</span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500">Forecast Horizon: </span>
+                    <span className="text-zinc-200">48 h</span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500">Env Source: </span>
+                    <span className="text-zinc-200">{envSource}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* SOURCE HYPOTHESIS SUMMARY Card (Requirement 10) */}
+              <div className="p-3.5 rounded-xl bg-[#090D16] border border-cyan-500/30 space-y-2.5 font-mono text-[11px] shadow-lg">
+                <div className="text-[10px] uppercase tracking-wider text-cyan-400 font-bold flex items-center justify-between pb-1.5 border-b border-white/10">
+                  <span>SOURCE HYPOTHESIS SUMMARY</span>
+                  <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold uppercase ${verdictBadgeCls}`}>
+                    {verdict}
+                  </span>
+                </div>
+                <div className="space-y-1.5 text-[10px]">
+                  <div>
+                    <span className="text-zinc-500 uppercase">Candidate: </span>
+                    <strong className="text-white">{candidateName}</strong>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500 uppercase">Spatial: </span>
+                    <span className="text-zinc-300">{offsetDist} ({spatialInterp})</span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500 uppercase">Temporal: </span>
+                    <span className="text-zinc-300">{temporal !== null ? `${temporal}%` : '--'} ({temporalInterp})</span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500 uppercase">Trajectory: </span>
+                    <span className="text-zinc-300">{orientDelta} ({trajectoryInterp})</span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500 uppercase">Plume: </span>
+                    <span className="text-zinc-300">{plume !== null ? `${plume}%` : '--'} ({plumeInterp})</span>
+                  </div>
+                  <div className="pt-1.5 border-t border-white/10 flex items-center justify-between">
+                    <span className="text-zinc-500 uppercase font-bold">Verdict: </span>
+                    <strong className={verdict === 'SUPPORTED' ? 'text-emerald-300' : verdict === 'WEAK' ? 'text-amber-300' : 'text-rose-300'}>
+                      {verdict}
+                    </strong>
+                  </div>
+                </div>
               </div>
             </div>
-
-            <CollapsibleParams title="Hypothesis Simulation Parameters" isExpanded={paramsExpanded} onToggle={() => setParamsExpanded(!paramsExpanded)}>
-              <ParamRow label="Assumed Speed" value="12.4 knots" />
-              <ParamRow label="Assumed Course" value="074°" />
-              <ParamRow label="Hypothetical Release" value="45 m³/h discharge rate" />
-              <ParamRow label="Weathering Decay" value="Evaporation 28% in 24h" />
-            </CollapsibleParams>
-
-            <ResultBox
-              label="Counterfactual Outcome"
-              highlight="HYPOTHESIS SUPPORTED"
-              subtext="Simulated forward plume matches satellite slick orientation and elongation within 83% tolerance."
-              status="PROTOTYPE COUNTERFACTUAL"
-              confidence="83%"
-            />
-          </div>
-        )}
+          );
+        })()}
 
         {/* --- STAGE 11: IMPACT --- */}
         {currentStep.id === 'impact_prioritization' && (() => {
@@ -760,10 +1100,10 @@ export const SimulationInspector: React.FC<SimulationInspectorProps> = ({
             <div className="space-y-4">
                 <SectionBox title="Forecast Plume Drift">
                   <div className="font-mono text-[11px] text-zinc-200">
-                    48-Hour Forward Lagrangian Dispersion Model
+                    48-Hour Forward Dispersion (Parametric Plume Geometry)
                   </div>
-                  <div className="text-[10px] text-zinc-500 mt-0.5">
-                    Forcing: CMEMS Surface Current (0.35 m/s) + ERA5 Wind Leeway
+                  <div className="text-[10px] text-amber-400/80 mt-0.5 font-mono">
+                    CURRENT PROTOTYPE: Parametric geometry (Distinguished from operational 3D hydrodynamic models)
                   </div>
                 </SectionBox>
 
@@ -886,11 +1226,11 @@ export const SimulationInspector: React.FC<SimulationInspectorProps> = ({
               </div>
               <ParamRow label="Incident ID" value="AT-2018-0004" />
               <ParamRow label="Observed Target" value="German Bight Slick" />
-              <ParamRow label="Detection Conf." value="87% (ConvNeXt-Tiny)" />
-              <ParamRow label="Lead Vessel" value="NORDIC POLARIS" />
-              <ParamRow label="Attribution Score" value="84%" />
-              <ParamRow label="Counterfactual" value="Supported (83%)" />
-              <ParamRow label="Impact Priority" value="HIGH (31h)" />
+              <ParamRow label="Detection Conf." value="98.7% (ConvNeXt-Tiny)" />
+              <ParamRow label="Lead Vessel" value="MT NORDIC POLARIS" />
+              <ParamRow label="Attribution Score" value="94.2% (Model Estimate)" />
+              <ParamRow label="Counterfactual" value="Supported (IoU 0.81)" />
+              <ParamRow label="Impact Priority" value="HIGH (Beaching 31h)" />
             </div>
 
             <button

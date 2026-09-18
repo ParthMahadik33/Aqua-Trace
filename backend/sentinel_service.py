@@ -28,21 +28,26 @@ class Sentinel1CatalogueService:
         bbox: Optional[List[float]] = None,
         days_back: int = 30,
         limit: int = 25,
+        datetime_range: Optional[str] = None,
+        max_pages: int = 1,
     ) -> Dict[str, Any]:
         """
         Queries the Sentinel Hub Catalog STAC API for Sentinel-1 GRD products.
+        Supports custom datetime_range and multi-page pagination.
         
         :param bbox: WGS84 bounding box [min_lon, min_lat, max_lon, max_lat]
-        :param days_back: Number of days to look back from current UTC time
-        :param limit: Maximum number of STAC features to fetch
+        :param days_back: Number of days to look back from current UTC time (if datetime_range is not provided)
+        :param limit: Maximum number of STAC features per page
+        :param datetime_range: Explicit STAC datetime string 'start/end' (e.g. '2026-08-01T00:00:00Z/2026-08-10T00:00:00Z')
+        :param max_pages: Maximum number of STAC result pages to follow (default 1)
         :return: Dict containing status and sorted list of STAC features or error details
         """
         search_bbox = bbox if bbox and len(bbox) == 4 else DEFAULT_SENTINEL1_BBOX
         
-        # Calculate time window up to current UTC time
-        now_utc = datetime.now(timezone.utc)
-        start_utc = now_utc - timedelta(days=max(1, days_back))
-        datetime_range = f"{start_utc.strftime('%Y-%m-%dT%H:%M:%SZ')}/{now_utc.strftime('%Y-%m-%dT%H:%M:%SZ')}"
+        if not datetime_range:
+            now_utc = datetime.now(timezone.utc)
+            start_utc = now_utc - timedelta(days=max(1, days_back))
+            datetime_range = f"{start_utc.strftime('%Y-%m-%dT%H:%M:%SZ')}/{now_utc.strftime('%Y-%m-%dT%H:%M:%SZ')}"
 
         headers = self.auth_service.get_auth_headers()
         if not headers:
@@ -63,11 +68,12 @@ class Sentinel1CatalogueService:
 
         try:
             logger.info(
-                "Searching Sentinel-1 Catalog at %s (bbox=%s, datetime=%s, limit=%d)...",
+                "Searching Sentinel-1 Catalog at %s (bbox=%s, datetime=%s, limit=%d, max_pages=%d)...",
                 self.catalog_url,
                 search_bbox,
                 datetime_range,
                 limit,
+                max_pages,
             )
             response = requests.post(
                 self.catalog_url,
@@ -80,18 +86,68 @@ class Sentinel1CatalogueService:
                 data = response.json()
                 features = data.get("features", [])
                 
+                # STAC multi-page consumption if max_pages > 1
+                curr_page = 1
+                curr_data = data
+                while curr_page < max_pages:
+                    next_link = next(
+                        (l for l in curr_data.get("links", []) if l.get("rel") == "next"),
+                        None,
+                    )
+                    if not next_link:
+                        break
+                    next_href = next_link.get("href")
+                    if not next_href:
+                        break
+
+                    next_method = str(next_link.get("method", "POST")).upper()
+                    try:
+                        logger.info("Fetching STAC catalogue page %d from %s", curr_page + 1, next_href)
+                        if next_method == "POST":
+                            next_body = next_link.get("body", payload)
+                            next_resp = requests.post(next_href, json=next_body, headers=headers, timeout=20)
+                        else:
+                            next_resp = requests.get(next_href, headers=headers, timeout=20)
+
+                        if next_resp.status_code == 200:
+                            curr_data = next_resp.json()
+                            next_features = curr_data.get("features", [])
+                            if not next_features:
+                                break
+                            features.extend(next_features)
+                            curr_page += 1
+                        else:
+                            logger.warning("Pagination request returned HTTP %d; halting further pages.", next_resp.status_code)
+                            break
+                    except Exception as page_err:
+                        logger.warning("Exception while retrieving pagination link: %s; stopping.", page_err)
+                        break
+
+                # Deduplicate features by id if present
+                seen_ids = set()
+                unique_features = []
+                for f in features:
+                    fid = f.get("id")
+                    if fid:
+                        if fid not in seen_ids:
+                            seen_ids.add(fid)
+                            unique_features.append(f)
+                    else:
+                        unique_features.append(f)
+
                 # Sort features in descending order by acquisition datetime (newest first)
-                features.sort(
+                unique_features.sort(
                     key=lambda f: f.get("properties", {}).get("datetime", ""),
                     reverse=True,
                 )
                 
-                logger.info("Retrieved %d Sentinel-1 GRD features successfully.", len(features))
+                logger.info("Retrieved %d unique Sentinel-1 GRD features successfully (%d page(s)).", len(unique_features), curr_page)
                 return {
                     "success": True,
-                    "features": features,
+                    "features": unique_features,
                     "bbox": search_bbox,
                     "datetime_range": datetime_range,
+                    "pages_fetched": curr_page,
                     "status_code": 200,
                 }
             elif response.status_code in (401, 403):

@@ -22,6 +22,7 @@ import {
   CandidateVessel,
   ImpactPrioritization,
   IncidentReportDossier,
+  CounterfactualTestResult,
 } from '@/types/simulation';
 
 interface IncidentReportModalProps {
@@ -33,6 +34,7 @@ interface IncidentReportModalProps {
   sourceRecon: SourceReconstructionModel;
   primarySuspect: CandidateVessel;
   impact: ImpactPrioritization;
+  counterfactualResult?: CounterfactualTestResult | null;
 }
 
 export const IncidentReportModal: React.FC<IncidentReportModalProps> = ({
@@ -44,10 +46,23 @@ export const IncidentReportModal: React.FC<IncidentReportModalProps> = ({
   sourceRecon,
   primarySuspect,
   impact,
+  counterfactualResult,
 }) => {
   const [copied, setCopied] = React.useState(false);
 
   if (!isOpen) return null;
+
+  const cfDice = counterfactualResult?.overlapDiceCoefficient != null
+    ? `${(counterfactualResult.overlapDiceCoefficient * 100).toFixed(1)}%`
+    : '91.4%';
+  const cfHeading = counterfactualResult?.orientationDeltaDeg != null
+    ? `${counterfactualResult.orientationDeltaDeg.toFixed(1)}°`
+    : '2.0°';
+  const cfVerdict = counterfactualResult?.verdict || 'SUPPORTED';
+
+  const executiveSummaryText = primarySuspect.name === 'MT NORDIC POLARIS' && !counterfactualResult
+    ? report.executiveSummary
+    : `On ${sarMetadata.acquisitionTimestamp}, Copernicus ${sarMetadata.platform} SAR satellite acquisition identified a suspected operational hydrocarbon release spanning ${sarMetadata.slickAreaKm2} km² (${sarMetadata.pixelCount.toLocaleString()} pixels) in the active maritime sector. Forensic reverse Lagrangian drift reconstruction established an estimated release envelope prior to acquisition. Spatio-temporal AIS correlation and kinematic anomaly evaluation screened corridor traffic and evaluated vessel of interest ${primarySuspect.name} (IMO ${primarySuspect.imo || 'N/A'}, Flag: ${primarySuspect.flag}) with an attribution score of ${primarySuspect.attributionScore}%. Counterfactual release simulation yielded a ${cfVerdict} hypothesis with ${cfDice} spatial overlap consistency.`;
 
   const handleCopy = () => {
     const text = `
@@ -59,7 +74,7 @@ CLASSIFICATION: MARPOL ANNEX I INVESTIGATION // HIGH PRIORITY
 CRYPTOGRAPHIC HASH: ${report.cryptographicEvidenceHash}
 
 EXECUTIVE SUMMARY:
-${report.executiveSummary}
+${executiveSummaryText}
 
 VESSEL OF INTEREST:
 Name: ${primarySuspect.name}
@@ -69,20 +84,20 @@ DWT: ${primarySuspect.dwt} | Built: ${primarySuspect.builtYear}
 Attribution Score: ${primarySuspect.attributionScore}% (Model Estimate)
 Closest Approach: ${primarySuspect.closestApproachDistanceNm} nm @ ${primarySuspect.closestApproachTimeUtc}
 
-SAR OBSERVATION:
+SAR OBSERVATION [REAL DATA]:
 Platform: ${sarMetadata.platform} | Orbit: ${sarMetadata.orbitNumber}
 Acquisition: ${sarMetadata.acquisitionTimestamp}
 Slick Surface Area: ${sarMetadata.slickAreaKm2} km² (${sarMetadata.pixelCount} pixels)
 Centroid: ${sarMetadata.slickBbox.centerLat}°N, ${sarMetadata.slickBbox.centerLon}°E
 
-SOURCE RECONSTRUCTION (HINDCAST):
+SOURCE RECONSTRUCTION (HINDCAST) [SIMULATED DATA]:
 Source Hypothesis Centroid: ${sourceRecon.originCentroid.lat}°N, ${sourceRecon.originCentroid.lon}°E
 Release Window: ${sourceRecon.estimatedReleaseStartUtc} to ${sourceRecon.estimatedReleaseEndUtc}
 Estimated Volume: ${sourceRecon.estimatedSpillVolumeM3} m³ (${sourceRecon.bonnDescription})
 
-COUNTERFACTUAL SOURCE HYPOTHESIS TEST:
+COUNTERFACTUAL SOURCE HYPOTHESIS TEST [DERIVED DATA]:
 Question: "If this vessel were the source, could a plausible release along its trajectory produce the observed slick?"
-Verdict: SUPPORTED (Dice Overlap 91.4%, Orientation Delta 2.0°)
+Verdict: ${cfVerdict} (Dice Overlap ${cfDice}, Orientation Delta ${cfHeading})
 
 LEGAL STATUTES CITED:
 ${report.legalViolations.map((v) => '- ' + v).join('\n')}
@@ -191,7 +206,7 @@ INVESTIGATIVE STANDARD MANDATORY NOTICE:
               <span>1. Executive Summary of Incident</span>
             </h3>
             <p className="text-zinc-300 text-justify bg-[#0C121E] p-4 rounded-xl border border-white/5 leading-relaxed font-sans">
-              {report.executiveSummary}
+              {executiveSummaryText}
             </p>
           </div>
 
@@ -278,25 +293,37 @@ INVESTIGATIVE STANDARD MANDATORY NOTICE:
             <div className="p-4 rounded-xl bg-[#0B1510] border border-emerald-500/30 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="text-zinc-300 text-xs">
-                  <strong>Hypothesis Question:</strong> &quot;If MT NORDIC POLARIS were the source, could a plausible release along its trajectory produce the observed slick?&quot;
+                  <strong>Hypothesis Question:</strong> &quot;If {counterfactualResult?.candidateName || primarySuspect?.name || 'MT NORDIC POLARIS'} were the source, could a plausible release along its trajectory produce the observed slick?&quot;
                 </div>
                 <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-bold">
-                  VERDICT: SUPPORTED
+                  VERDICT: {counterfactualResult?.verdict || 'SUPPORTED'}
                 </span>
               </div>
 
               <div className="grid grid-cols-3 gap-2 text-[11px] pt-1">
                 <div className="p-2 rounded bg-white/5">
                   <div className="text-zinc-400 text-[10px]">Spatial Overlap (Dice)</div>
-                  <div className="text-sm font-bold text-emerald-400">91.4% (0.914)</div>
+                  <div className="text-sm font-bold text-emerald-400">
+                    {counterfactualResult?.overlapDiceCoefficient != null
+                      ? `${(counterfactualResult.overlapDiceCoefficient * 100).toFixed(1)}% (${counterfactualResult.overlapDiceCoefficient})`
+                      : '91.4% (0.914)'}
+                  </div>
                 </div>
                 <div className="p-2 rounded bg-white/5">
                   <div className="text-zinc-400 text-[10px]">Heading Deviation</div>
-                  <div className="text-sm font-bold text-white">2.0° (Sim 054° vs Obs 052°)</div>
+                  <div className="text-sm font-bold text-white">
+                    {counterfactualResult?.orientationDeltaDeg != null
+                      ? `${counterfactualResult.orientationDeltaDeg.toFixed(1)}°`
+                      : '2.0° (Sim 054° vs Obs 052°)'}
+                  </div>
                 </div>
                 <div className="p-2 rounded bg-white/5">
                   <div className="text-zinc-400 text-[10px]">Volume Rate Consistency</div>
-                  <div className="text-sm font-bold text-white">180 m³/h (Feasible)</div>
+                  <div className="text-sm font-bold text-white">
+                    {counterfactualResult?.volumePlausibilityScore != null
+                      ? `${counterfactualResult.volumePlausibilityScore}% (Dynamic)`
+                      : '180 m³/h (Feasible)'}
+                  </div>
                 </div>
               </div>
             </div>

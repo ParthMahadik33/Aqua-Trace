@@ -15,7 +15,10 @@ export type SimulationStepId =
 export type SimulationStatusTag =
   | 'REAL SAR DATA'
   | 'REAL METADATA'
+  | 'REAL SATELLITE ASSET'
   | 'LIVE AIS'
+  | 'LIVE-DERIVED CANDIDATES'
+  | 'CURATED CASE DATA'
   | 'PROTOTYPE MODEL'
   | 'SIMULATED INPUT'
   | 'MODEL ESTIMATE'

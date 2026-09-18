@@ -2,11 +2,27 @@ import logging
 from flask import Flask, jsonify, request, Response
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
-from config import SERVER_HOST, SERVER_PORT, CORS_ALLOWED_ORIGINS, BOUNDING_BOX_PRESETS, DEFAULT_SENTINEL1_BBOX
+from config import (
+    SERVER_HOST,
+    SERVER_PORT,
+    CORS_ALLOWED_ORIGINS,
+    BOUNDING_BOX_PRESETS,
+    DEFAULT_SENTINEL1_BBOX,
+    SCREENING_AUTO_START,
+)
 from ais_relay import AISRelayService
 from copernicus_service import CopernicusAuthService
 from sentinel_service import Sentinel1CatalogueService
 from sentinel_process_service import Sentinel1ProcessService
+from acquisition_registry import AcquisitionRegistry
+from quality_gate import QualityGate
+from ai_triage_adapter import DevelopmentAITriageAdapter
+from screening_policy import ScreeningPolicy
+from incident_store import IncidentStore
+from screening_service import ScreeningService
+from counterfactual_engine import CounterfactualDriftEngine
+from ais_correlation_service import AISCorrelationService
+from ml_service import ml_service
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("AquaTraceApp")
@@ -41,6 +57,27 @@ sentinel_process_service = Sentinel1ProcessService(
     catalogue_service=sentinel_service
 )
 
+# Initialize Acquisition Registry, Quality Gate, AI Triage Adapter, Policy & Incident Store
+acquisition_registry = AcquisitionRegistry()
+quality_gate = QualityGate()
+ai_triage_adapter = DevelopmentAITriageAdapter()
+screening_policy = ScreeningPolicy()
+incident_store = IncidentStore()
+
+# Initialize Dynamic Counterfactual Engine and AIS Correlation Service
+counterfactual_engine = CounterfactualDriftEngine()
+ais_correlation_service = AISCorrelationService(ais_relay_service=ais_service)
+
+# Initialize Autonomous Screening Watcher Service
+screening_service = ScreeningService(
+    catalogue_service=sentinel_service,
+    acquisition_registry=acquisition_registry,
+    quality_gate=quality_gate,
+    triage_adapter=ai_triage_adapter,
+    screening_policy=screening_policy,
+    incident_store=incident_store,
+)
+
 
 @app.route("/", methods=["GET"])
 def root_status():
@@ -50,6 +87,9 @@ def root_status():
         "service": "AquaTrace Maritime Intelligence Backend",
         "ais_status": ais_service.connection_status,
         "vessels_tracked": len(ais_service.get_all_ships()),
+        "acquisitions_registered": acquisition_registry.count(),
+        "incidents_created": incident_store.count(),
+        "screening_watcher_active": screening_service.is_running,
         "endpoints": [
             "/api/health",
             "/api/ships",
@@ -57,6 +97,15 @@ def root_status():
             "/api/copernicus/test-auth",
             "/api/copernicus/sentinel1/latest",
             "/api/copernicus/sentinel1/image",
+            "/api/acquisitions",
+            "/api/acquisitions/<id>",
+            "/api/screening/run",
+            "/api/screening/status",
+            "/api/incidents",
+            "/api/incidents/<id>",
+            "/api/incidents/<id>/acknowledge",
+            "/api/incidents/<id>/candidates",
+            "/api/simulation/counterfactual",
             "/socket.io"
         ]
     }), 200
@@ -201,6 +250,364 @@ def get_sentinel1_image():
     return jsonify(metadata_or_error or {"success": False, "error": "Failed to generate SAR image"}), status_code
 
 
+@app.route("/api/acquisitions", methods=["GET"])
+def get_acquisitions():
+    """
+    Returns registered Sentinel-1 acquisitions with optional filtering by zone_id and status.
+    """
+    zone_id = request.args.get("zone_id")
+    status = request.args.get("status")
+    limit_param = request.args.get("limit", 50)
+    try:
+        limit = max(1, min(int(limit_param), 200))
+    except (ValueError, TypeError):
+        limit = 50
+
+    records = acquisition_registry.list_all(zone_id=zone_id, status=status, limit=limit)
+    return jsonify({
+        "success": True,
+        "count": len(records),
+        "total": acquisition_registry.count(),
+        "acquisitions": records
+    }), 200
+
+
+@app.route("/api/acquisitions/<acq_id>", methods=["GET"])
+def get_acquisition_by_id(acq_id: str):
+    """
+    Retrieves detailed metadata, quality result, and screening state for a specific acquisition.
+    Matches either internal acquisition id or canonical product_id.
+    """
+    record = acquisition_registry.get_by_id(acq_id.strip())
+    if not record:
+        return jsonify({
+            "success": False,
+            "error": "Acquisition not found",
+            "id": acq_id
+        }), 404
+
+    return jsonify({
+        "success": True,
+        "acquisition": record
+    }), 200
+
+
+@app.route("/api/screening/run", methods=["POST"])
+def trigger_screening_run():
+    """
+    Manually triggers one autonomous satellite screening reconciliation cycle.
+    Accepts optional JSON / query parameters:
+      - zone_id: string (optional, target a single zone e.g. MALACCA_STRAIT)
+      - force_lookback_days: integer (optional, override checkpoint for lookback)
+      - reset_checkpoints: boolean (optional, clear zone checkpoints before running)
+    """
+    data = request.get_json(silent=True) or {}
+    zone_id = data.get("zone_id") or request.args.get("zone_id")
+    force_lookback_raw = data.get("force_lookback_days") or request.args.get("force_lookback_days")
+    reset_checkpoints_raw = data.get("reset_checkpoints") or request.args.get("reset_checkpoints")
+
+    force_lookback = None
+    if force_lookback_raw is not None:
+        try:
+            force_lookback = int(force_lookback_raw)
+        except (ValueError, TypeError):
+            pass
+
+    reset_checkpoints = str(reset_checkpoints_raw).lower() in ("true", "1", "yes")
+
+    result = screening_service.run_reconciliation_cycle(
+        zone_id=zone_id,
+        force_lookback_days=force_lookback,
+        reset_checkpoints=reset_checkpoints,
+    )
+
+    status_code = 200 if result.get("success") else 502
+    return jsonify({
+        "success": result.get("success", False),
+        "summary": {
+            "discovered": result.get("discovered", 0),
+            "new": result.get("new", 0),
+            "duplicates": result.get("duplicates", 0),
+            "passed_quality": result.get("passed_quality", 0),
+            "rejected_quality": result.get("rejected_quality", 0),
+            "triage_candidates": result.get("triage_candidates", 0),
+            "incidents_created": result.get("incidents_created", 0),
+            "last_incident_created": result.get("last_incident_created"),
+            "failed": result.get("failed", 0),
+        },
+        "cycle_details": result
+    }), status_code
+
+
+@app.route("/api/screening/status", methods=["GET"])
+def get_screening_status():
+    """
+    Returns the operational status, observability telemetry, checkpoints,
+    and last run summary of the autonomous screening watcher.
+    """
+    status_data = screening_service.get_status()
+    return jsonify({
+        "success": True,
+        "status": status_data
+    }), 200
+
+
+@app.route("/api/incidents", methods=["GET"])
+def get_incidents():
+    """
+    Returns list of screening incidents with optional filtering by zone_id,
+    investigation_state, or triage_status.
+    Safe and sanitized: does not expose credentials or secrets.
+    """
+    zone_id = request.args.get("zone_id")
+    state = request.args.get("state") or request.args.get("investigation_state")
+    triage_status = request.args.get("triage_status")
+    limit = request.args.get("limit", 50)
+    try:
+        limit_val = max(1, min(int(limit), 200))
+    except (ValueError, TypeError):
+        limit_val = 50
+
+    incidents = incident_store.list_incidents(
+        zone_id=zone_id,
+        investigation_state=state,
+        triage_status=triage_status,
+        limit=limit_val,
+    )
+    return jsonify({
+        "count": len(incidents),
+        "total": incident_store.count(),
+        "incidents": incidents,
+    }), 200
+
+
+@app.route("/api/incidents/<incident_id>", methods=["GET"])
+def get_incident(incident_id: str):
+    """
+    Returns detailed incident metadata including real acquisition properties,
+    candidate geometry, triage result, and investigation state.
+    """
+    incident = incident_store.get_by_incident_id(incident_id)
+    if not incident:
+        return jsonify({
+            "error": "Incident not found",
+            "incident_id": incident_id,
+        }), 404
+    return jsonify(incident), 200
+
+
+@app.route("/api/incidents/<incident_id>/acknowledge", methods=["POST"])
+def acknowledge_incident(incident_id: str):
+    """
+    Acknowledges an autonomous candidate incident for investigation.
+    """
+    data = request.get_json(silent=True) or {}
+    notes = data.get("notes")
+    updated = incident_store.update_investigation_state(
+        incident_id=incident_id,
+        new_state="ACKNOWLEDGED",
+        notes=notes,
+    )
+    if not updated:
+        return jsonify({
+            "error": "Incident not found",
+            "incident_id": incident_id,
+        }), 404
+    return jsonify({
+        "success": True,
+        "incident": updated,
+    }), 200
+
+
+@app.route("/api/incidents/<incident_id>/candidates", methods=["GET"])
+def get_incident_candidates(incident_id: str):
+    """
+    Returns dynamically correlated candidate vessels for a given incident anomaly.
+    Searches available AIS data in the corridor; distinguishes live traffic from historical archive limits.
+    """
+    incident = incident_store.get_by_incident_id(incident_id)
+    if not incident:
+        return jsonify({
+            "error": "Incident not found",
+            "incident_id": incident_id,
+        }), 404
+
+    result = ais_correlation_service.correlate_candidates(incident)
+    return jsonify(result), 200
+
+
+@app.route("/api/simulation/counterfactual", methods=["POST"])
+def run_counterfactual_simulation():
+    """
+    Executes a parameter-driven Lagrangian / kinematic counterfactual hypothesis test.
+    Simulates vessel movement, forward particle dispersion under currents and windage,
+    and calculates raw spatial, trajectory, and overlap consistency metrics against observed slick.
+    """
+    data = request.get_json(silent=True) or {}
+
+    candidate = data.get("candidate")
+    if not candidate or not isinstance(candidate, dict):
+        return jsonify({"error": "Missing or invalid 'candidate' payload"}), 400
+
+    # Coordinate validation for candidate
+    try:
+        if "lat" not in candidate or "lon" not in candidate:
+            return jsonify({"error": "Missing candidate coordinates: 'lat' and 'lon' are required"}), 400
+        lat = float(candidate["lat"])
+        lon = float(candidate["lon"])
+        if not (-90.0 <= lat <= 90.0) or not (-180.0 <= lon <= 180.0):
+            return jsonify({"error": "Invalid candidate coordinates: lat must be in [-90, 90], lon in [-180, 180]"}), 400
+    except (ValueError, TypeError):
+        return jsonify({"error": "Invalid candidate coordinates: 'lat' and 'lon' must be numeric"}), 400
+
+    # Optional SOG & COG validation
+    sog = candidate.get("sog") or candidate.get("speed_kn")
+    if sog is not None:
+        try:
+            sog_val = float(sog)
+            if sog_val < 0.0 or sog_val > 100.0:
+                return jsonify({"error": "Invalid candidate SOG: speed must be between 0 and 100 knots"}), 400
+        except (ValueError, TypeError):
+            return jsonify({"error": "Invalid candidate SOG: must be numeric"}), 400
+
+    cog = candidate.get("cog") or candidate.get("course_deg")
+    if cog is not None:
+        try:
+            cog_val = float(cog)
+            if not (-360.0 <= cog_val <= 360.0):
+                return jsonify({"error": "Invalid candidate COG: course must be between -360 and 360 degrees"}), 400
+        except (ValueError, TypeError):
+            return jsonify({"error": "Invalid candidate COG: must be numeric"}), 400
+
+    incident_id = data.get("incident_id")
+    observed_slick = data.get("observed_slick") or {}
+    if not isinstance(observed_slick, dict):
+        return jsonify({"error": "Insufficient geometry for overlap calculation: observed_slick must be an object"}), 400
+
+    # If incident_id is provided, enhance observed_slick with incident candidate geometry/centroid
+    if incident_id:
+        incident = incident_store.get_by_incident_id(incident_id)
+        if incident:
+            centroid = incident.get("candidate_centroid")
+            if centroid:
+                observed_slick["centroid"] = centroid
+            if incident.get("candidate_area_km2"):
+                observed_slick["area_km2"] = incident.get("candidate_area_km2")
+            if incident.get("bbox"):
+                observed_slick["extent"] = incident.get("bbox")
+
+    # If observed_slick centroid is present, validate coordinates
+    obs_c = observed_slick.get("centroid")
+    if obs_c:
+        try:
+            if isinstance(obs_c, dict):
+                o_lat = float(obs_c.get("lat"))
+                o_lon = float(obs_c.get("lon"))
+            elif isinstance(obs_c, (list, tuple)) and len(obs_c) >= 2:
+                o_lon = float(obs_c[0])
+                o_lat = float(obs_c[1])
+            else:
+                return jsonify({"error": "Insufficient geometry for overlap calculation: malformed observed centroid"}), 400
+
+            if not (-90.0 <= o_lat <= 90.0) or not (-180.0 <= o_lon <= 180.0):
+                return jsonify({"error": "Insufficient geometry for overlap calculation: observed centroid out of bounds"}), 400
+        except (ValueError, TypeError):
+            return jsonify({"error": "Insufficient geometry for overlap calculation: observed centroid values must be numeric"}), 400
+    else:
+        # Fallback to candidate coordinates as baseline reference
+        observed_slick["centroid"] = {"lat": lat, "lon": lon}
+
+    release_time = data.get("release_time")
+    try:
+        duration_hours = float(data.get("duration_hours", 0.25))
+    except (ValueError, TypeError):
+        duration_hours = 0.25
+
+    current_vector = data.get("current_vector")
+    wind_vector = data.get("wind_vector")
+    environment_source = data.get("environment_source")
+
+    result = counterfactual_engine.run_counterfactual_test(
+        candidate=candidate,
+        observed_slick=observed_slick,
+        release_time_iso=release_time,
+        duration_hours=duration_hours,
+        current_vector=current_vector,
+        wind_vector=wind_vector,
+        environment_source=environment_source,
+    )
+
+    return jsonify(result), 200
+
+
+@app.route("/api/ml/classify", methods=["POST"])
+def ml_classify_scene():
+    """
+    Executes ConvNeXt-Tiny inference on calibrated 2-channel VV/VH input
+    or returns structured simulation baseline with authenticated validation metrics.
+    """
+    data = request.get_json(silent=True) or {}
+    result = ml_service.classify(data)
+    return jsonify(result), 200
+
+
+@app.route("/api/screening/quality-gate", methods=["POST"])
+def evaluate_quality_gate():
+    """
+    Evaluates SAR acquisition quality against operational screening rules
+    (incidence angle, missing nodata lines, land mask contamination, polarization).
+    """
+    data = request.get_json(silent=True) or {}
+    acquisition_data = data.get("acquisition_data") or {
+        "id": "part1_oil_00004",
+        "product_id": "S1A_IW_GRDH_1SDV_20180803T172551_20180803T172608_023085_0281B1_DB30",
+        "acquisition_time_utc": "2018-08-03T17:25:51Z",
+        "collection": "sentinel-1-grd",
+        "instrument_mode": "IW",
+        "polarization": ["VV", "VH"],
+        "bbox": [5.6, 55.0, 6.2, 55.5],
+        "incidence_angle_deg": 34.2,
+        "nodata_percent": 0.0,
+        "land_mask_percent": 0.0,
+    }
+    zone_bbox = data.get("zone_bbox")
+    wind_data = data.get("wind_data") or {"speed_ms": 4.8}
+
+    result = quality_gate.evaluate(
+        acquisition_data=acquisition_data,
+        zone_bbox=zone_bbox,
+        wind_data=wind_data,
+    )
+    return jsonify(result), 200
+
+
+@app.route("/api/simulation/hindcast", methods=["POST"])
+def run_hindcast_simulation():
+    """
+    Executes backward Lagrangian particle dispersion (T0 -> T-18h)
+    to calculate the historical source corridor and release locus envelope.
+    """
+    data = request.get_json(silent=True) or {}
+    origin_lat = float(data.get("origin_lat", 55.2443))
+    origin_lon = float(data.get("origin_lon", 5.8856))
+    duration_hours = float(data.get("duration_hours", 18.0))
+    current_vector = data.get("current_vector")
+    wind_vector = data.get("wind_vector")
+    seed = data.get("seed", 42)
+
+    result = counterfactual_engine.run_backward_hindcast(
+        origin_lat=origin_lat,
+        origin_lon=origin_lon,
+        duration_hours=duration_hours,
+        current_vector=current_vector,
+        wind_vector=wind_vector,
+        seed=seed,
+    )
+    return jsonify(result), 200
+
+
+
+
 
 
 
@@ -322,8 +729,12 @@ def handle_change_sector(data):
 def start_server():
     # Start the AIS relay background worker
     ais_service.start()
+    # Start autonomous satellite screening watcher background worker
+    if SCREENING_AUTO_START:
+        screening_service.start()
     logger.info(f"Starting AquaTrace Flask-SocketIO server on {SERVER_HOST}:{SERVER_PORT}")
     socketio.run(app, host=SERVER_HOST, port=SERVER_PORT, debug=False, use_reloader=False, allow_unsafe_werkzeug=True)
+
 
 
 if __name__ == "__main__":

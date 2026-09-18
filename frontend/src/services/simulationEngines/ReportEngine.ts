@@ -44,7 +44,7 @@ export class ReportEngine
       cryptographicEvidenceHash:
         'SHA256:7f8a91c30e42d88190bcfa12a55018f760991823bb9e3427814bfa4d8123c89a',
       executiveSummary:
-        'On 2018-08-03 at 17:25:51 UTC, Copernicus Sentinel-1A SAR satellite acquisition identified a major illegal hydrocarbon discharge spanning 4.41 km² (44,049 pixels) in the North Sea / German Bight corridor. Forensic reverse Lagrangian drift reconstruction established the discharge event occurred between 11:45 and 13:20 UTC at 55.188°N, 5.812°E. High-confidence spatio-temporal AIS correlation and kinematic anomaly detection identified chemical/oil products tanker MT NORDIC POLARIS (IMO 9382100) with a 94.2% attribution score, showing direct track intersection (0.38 nm), course alignment (054° vs 052°), and a deliberate speed dip during unballasting / tank-washing discharge.',
+        `On ${input.sarProductDetails.timestamp || '2018-08-03 at 17:25:51 UTC'}, Copernicus Sentinel-1A SAR satellite acquisition identified a suspected operational hydrocarbon release spanning ${input.sarProductDetails.areaKm2 || 4.41} km² (${input.sarProductDetails.pixelCount ? input.sarProductDetails.pixelCount.toLocaleString() : '44,049'} pixels) in the North Sea / German Bight corridor. Forensic reverse Lagrangian drift reconstruction established the release event occurred between 11:45 and 13:20 UTC at 55.188°N, 5.812°E. High-confidence spatio-temporal AIS correlation and kinematic anomaly detection identified chemical/oil products tanker ${input.vesselOfInterest.name} (IMO ${input.vesselOfInterest.imo}) with a ${input.attributionScore}% attribution score, showing direct track intersection (0.38 nm), course alignment (054° vs 052°), and an unexplained speed reduction consistent with potential slow-steaming operational release. Counterfactual release simulation verdict: ${input.counterfactualVerdict || 'SUPPORTED'}.`,
       vesselOfInterestParticulars: {
         name: input.vesselOfInterest.name,
         imo: input.vesselOfInterest.imo,
@@ -57,52 +57,52 @@ export class ReportEngine
       attributionStatement:
         'Attribution is an investigative hypothesis and requires analyst verification.',
       mandatoryVerificationClause:
-        'ATTRIBUTION IS AN INVESTIGATIVE HYPOTHESIS AND REQUIRES ANALYST VERIFICATION. Physical sampling (GC-MS fingerprinting) and onboard port state control inspection logs are required prior to judicial sanction.',
+        'ATTRIBUTION IS AN INVESTIGATIVE HYPOTHESIS AND REQUIRES ANALYST VERIFICATION. Physical sampling (GC-MS fingerprinting) and onboard port state control inspection logs are required prior to administrative or judicial proceedings.',
       legalViolations: [
         'MARPOL 73/78 Annex I, Regulation 15: Prohibition of oily mixture discharge into sea outside permitted limits (>15 ppm).',
-        'UNCLOS Article 194 & 211: Obligation to prevent, reduce and control intentional vessel pollution in EEZ.',
+        'UNCLOS Article 194 & 211: Obligation to prevent, reduce and control vessel pollution in EEZ.',
         'Bonn Agreement 1983: Joint Cooperation in Dealing with Pollution of the North Sea by Oil and Other Harmful Substances.',
       ],
       chainOfCustody: [
         {
           step: 'SAR Raw Telemetry Ingestion',
-          source: 'ESA Copernicus Data Space Ecosystem API (Level-1 GRDH)',
+          source: 'ESA Copernicus Data Space Ecosystem API (Level-1 GRDH) [REAL SATELLITE ASSET]',
           timestamp: '2018-08-03T17:35:12Z',
           integrityVerified: true,
         },
         {
           step: 'Radar Damping Verification',
-          source: 'Sigma0 Dual-Pol (VV/VH) Calibrated Backscatter Processor',
+          source: 'Sigma0 Dual-Pol (VV/VH) Calibrated Backscatter Processor [DERIVED RESULT]',
           timestamp: '2018-08-03T17:42:05Z',
           integrityVerified: true,
         },
         {
           step: 'AI Slick Segmentation',
-          source: 'AquaTrace Deep SAR Segmentation Engine (Benchmark Part 1)',
+          source: 'AquaTrace Deep SAR Segmentation Engine [SIMULATED PROTOTYPE]',
           timestamp: '2018-08-03T17:48:30Z',
           integrityVerified: true,
         },
         {
           step: 'Hydrodynamic Back-Projection',
-          source: 'Lagrangian Reverse Drift Dispersion Physics Model',
+          source: 'Lagrangian Reverse Drift Dispersion Physics Model [DERIVED RESULT]',
           timestamp: '2018-08-03T17:55:40Z',
           integrityVerified: true,
         },
         {
           step: 'AIS Spatio-Temporal Intersect',
-          source: 'North Sea Marine Traffic Historical AIS Archive',
+          source: 'North Sea Marine Traffic Historical AIS Archive [CURATED CASE DATA]',
           timestamp: '2018-08-03T18:10:15Z',
           integrityVerified: true,
         },
         {
-          step: 'Bayesian Culpability Attribution',
-          source: 'AquaTrace Multi-Factor Attribution Engine',
+          step: 'Multi-Factor Vessel Attribution',
+          source: 'AquaTrace Multi-Factor Attribution Engine [DERIVED RESULT]',
           timestamp: '2018-08-03T18:25:00Z',
           integrityVerified: true,
         },
         {
           step: 'Counterfactual Hypothesis Test',
-          source: 'Forward Kinematic Release Plume Simulator',
+          source: 'Forward Kinematic Release Plume Simulator [DERIVED RESULT]',
           timestamp: '2018-08-03T18:35:10Z',
           integrityVerified: true,
         },

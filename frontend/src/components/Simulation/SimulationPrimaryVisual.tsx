@@ -26,10 +26,13 @@ import {
   Clock,
   Eye,
   CheckCircle2,
+  Play,
+  RotateCcw,
 } from 'lucide-react';
 import {
   CASE_0004_AIS_FUNNEL,
   CASE_0004_COUNTERFACTUAL_TEST,
+  CANONICAL_CASE_0004_PREDICTION,
 } from '@/data/case0004Data';
 
 interface SimulationPrimaryVisualProps {
@@ -61,6 +64,8 @@ interface SimulationPrimaryVisualProps {
   onToggleImpactLayer?: (
     layerKey: 'coastalExposure' | 'ecological' | 'fisheries' | 'population'
   ) => void;
+  dynamicCounterfactual?: any;
+  onRunCounterfactual?: (candidate?: CandidateVessel | null) => void;
 }
 
 export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = ({
@@ -85,6 +90,8 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
   onToggleImpactPlay,
   impactLayers,
   onToggleImpactLayer,
+  dynamicCounterfactual,
+  onRunCounterfactual,
 }) => {
   // Local state for Stage 02 SAR view modes
   const [sarViewMode, setSarViewMode] = useState<'composite' | 'vv' | 'panel'>('composite');
@@ -94,6 +101,8 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
   const [segMode, setSegMode] = useState<'overlay' | 'mask'>('overlay');
   // Local state for Stage 10 Counterfactual simulation toggle
   const [isCounterfactualRunning, setIsCounterfactualRunning] = useState(false);
+  // Local state for Stage 10 Counterfactual dynamic timeline snapshot (T+0 to T+48h)
+  const [counterfactualTimelineStep, setCounterfactualTimelineStep] = useState<number>(0);
 
   // Local state for Stage 11 Impact Prioritization (fallback if uncontrolled)
   const [localImpactHours, setLocalImpactHours] = useState<number>(0);
@@ -118,19 +127,20 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
     });
 
   // Determine which type of primary visual to display:
-  // MAP STAGES: 01 (surveillance), 06 (environmental), 07 (source_reconstruction), 08 (ais_correlation), 09 (attribution), 11 (impact_prioritization)
+  // MAP STAGES: 01 (surveillance), 06 (environmental), 07 (source_reconstruction), 08 (ais_correlation), 09 (attribution), 10 (counterfactual), 11 (impact_prioritization)
   const isMapStage =
     currentStepId === 'surveillance' ||
     currentStepId === 'environmental' ||
     currentStepId === 'source_reconstruction' ||
     currentStepId === 'ais_correlation' ||
     currentStepId === 'attribution' ||
+    currentStepId === 'counterfactual' ||
     currentStepId === 'impact_prioritization';
 
   return (
     <div className="relative w-full h-full bg-[#05070D] overflow-hidden flex flex-col select-none">
       {/* ============================================================ */}
-      {/* 1. MAP-BASED STAGES (Surveillance, Metocean, Hindcast, AIS, Attribution, Impact) */}
+      {/* 1. MAP-BASED STAGES (Surveillance, Metocean, Hindcast, AIS, Attribution, Counterfactual, Impact) */}
       {/* ============================================================ */}
       {isMapStage && (
         <div className="relative w-full h-full">
@@ -148,6 +158,8 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
             overlayOpacity={overlayOpacity}
             forecastHours={effectiveImpactHours}
             forecastLayers={effectiveImpactLayers}
+            dynamicCounterfactual={dynamicCounterfactual}
+            counterfactualTimelineStep={counterfactualTimelineStep}
           />
 
           {/* Stage 01: Surveillance Incoming Observation Event Banner */}
@@ -264,6 +276,174 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
               onToggleLayer={toggleEffectiveImpactLayer}
             />
           )}
+
+          {/* Stage 10: Counterfactual Interactive Map HUD Overlay */}
+          {currentStepId === 'counterfactual' && (() => {
+            const isDynamic = Boolean(dynamicCounterfactual && dynamicCounterfactual.isDynamic);
+            const candidate = dynamicCounterfactual?.candidate || selectedCandidate;
+            const candName = isDynamic
+              ? candidate?.name || 'Candidate Vessel'
+              : selectedCandidate?.name || 'MT NORDIC POLARIS';
+            const candMmsi = isDynamic
+              ? candidate?.mmsi || selectedCandidate?.mmsi || 'UNKNOWN'
+              : selectedCandidate?.mmsi || '257004000';
+            const candSog = candidate?.sog ?? selectedCandidate?.speedAtClosestApproachKn ?? 12.0;
+            const candCog = candidate?.cog ?? selectedCandidate?.courseAtClosestApproachDeg ?? 50.0;
+
+            const verdict = isDynamic
+              ? dynamicCounterfactual.verdict || 'SUPPORTED'
+              : 'SUPPORTED';
+            const verdictLabel = isDynamic
+              ? dynamicCounterfactual.verdictLabel || `HYPOTHESIS ${verdict}`
+              : 'HYPOTHESIS SUPPORTED';
+            const verdictCls =
+              verdict === 'SUPPORTED'
+                ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
+                : verdict === 'WEAK'
+                ? 'bg-amber-500/20 border-amber-400 text-amber-300'
+                : 'bg-rose-500/20 border-rose-400 text-rose-300';
+
+            const env = dynamicCounterfactual?.environment;
+            const envSource = env?.source || (isDynamic ? 'PROTOTYPE_BASELINE' : 'PROTOTYPE_BASELINE');
+            const envSourceLabel = env?.source_label || (isDynamic ? 'Environmental forcing: Prototype baseline' : 'Historical Hindcast');
+
+            return (
+              <div className="absolute inset-0 z-[400] pointer-events-none flex flex-col justify-between p-3.5">
+                {/* Top Floating HUD Bar: Hypothesis Statement & Candidate Switcher */}
+                <div className="pointer-events-auto max-w-4xl p-3 rounded-xl bg-[#080C14]/95 border border-cyan-500/40 text-xs font-mono shadow-2xl backdrop-blur-md space-y-2.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-white/10">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <GitCompare className="w-4 h-4 text-cyan-400" />
+                        <span className="font-bold text-cyan-400 uppercase tracking-wide">
+                          STAGE 10: SOURCE HYPOTHESIS TEST // {isDynamic ? 'DYNAMIC KINEMATIC' : 'BENCHMARK'}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded border text-[10px] font-bold uppercase ${verdictCls}`}>
+                          {verdictLabel}
+                        </span>
+                      </div>
+                      {/* One clear hypothesis question */}
+                      <p className="text-zinc-100 font-sans text-sm font-semibold mt-1">
+                        Could this vessel physically explain the observed slick?
+                      </p>
+                      <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
+                        Testing <span className="text-cyan-300 font-bold">{candName}</span> (MMSI: {candMmsi}) · Speed: {candSog} kn · Course: {String(candCog).padStart(3, '0')}°
+                      </div>
+                    </div>
+
+                    {/* Environmental Forcing Badge */}
+                    <div className="flex sm:flex-col sm:items-end gap-1">
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${
+                          envSource === 'REAL'
+                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                            : envSource === 'UNAVAILABLE'
+                            ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                            : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                        }`}
+                      >
+                        {envSource === 'PROTOTYPE_BASELINE' ? 'PROTOTYPE BASELINE' : envSource}
+                      </span>
+                      <span className="text-[9px] text-zinc-400 font-mono text-right max-w-xs truncate">
+                        {envSourceLabel}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Candidate Switcher Bar */}
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[10px] text-zinc-400 uppercase font-bold">Candidate:</span>
+                      {candidates.map((c) => {
+                        const isSel = selectedCandidate?.mmsi === c.mmsi;
+                        const cSog = c.speedAtClosestApproachKn ?? (c as any).sog ?? '--';
+                        const cCog = c.courseAtClosestApproachDeg ?? (c as any).cog ?? '--';
+                        return (
+                          <button
+                            key={c.mmsi}
+                            onClick={() => {
+                              onSelectCandidate(c);
+                              if (onRunCounterfactual) onRunCounterfactual(c);
+                            }}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-mono border transition-all cursor-pointer ${
+                              isSel
+                                ? 'bg-cyan-500/20 text-cyan-200 border-cyan-400 font-bold shadow-md'
+                                : 'bg-white/5 text-zinc-400 border-white/10 hover:text-white hover:bg-white/10'
+                            }`}
+                          >
+                            <Ship className={`w-3.5 h-3.5 ${isSel ? 'text-cyan-400' : 'text-zinc-500'}`} />
+                            <span>{c.name}</span>
+                            <span className="text-[10px] text-zinc-500 font-normal">
+                              ({cSog} kn, {cCog}°)
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {onRunCounterfactual && (
+                      <button
+                        onClick={() => onRunCounterfactual(selectedCandidate)}
+                        className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold transition-all cursor-pointer shadow-sm"
+                      >
+                        <Play className="w-3.5 h-3.5 fill-emerald-400" />
+                        <span>RUN SOURCE HYPOTHESIS TEST</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Bottom Floating HUD Bar: Timeline Scrubber & Tactical Legend */}
+                <div className="pointer-events-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-[#080C14]/95 border border-white/15 text-xs font-mono shadow-2xl backdrop-blur-md">
+                  {/* Timeline Scrubber */}
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-cyan-400" />
+                    <span className="text-zinc-300 font-bold text-[10px] uppercase tracking-wider">
+                      Advection Timeline:
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {[0, 6, 12, 24, 48].map((hours) => {
+                        const isSel = counterfactualTimelineStep === hours;
+                        return (
+                          <button
+                            key={hours}
+                            onClick={() => setCounterfactualTimelineStep(hours)}
+                            className={`px-2.5 py-1 rounded text-xs font-bold transition-all cursor-pointer ${
+                              isSel
+                                ? 'bg-cyan-500 text-black shadow-md'
+                                : 'bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white border border-white/10'
+                            }`}
+                          >
+                            T+{hours}h
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Tactical Map Legend (Explicitly Observed vs Simulated) */}
+                  <div className="flex flex-wrap items-center gap-3 text-[10px] pt-1 sm:pt-0 border-t sm:border-t-0 border-white/10">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-sm bg-rose-500/40 border border-rose-500" />
+                      <span className="text-rose-300 font-bold">OBSERVED SLICK</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
+                      <span className="text-cyan-300 font-bold">SIMULATED PLUME</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-3 h-0.5 bg-amber-400" />
+                      <span className="text-amber-300 font-bold">VESSEL TRACK</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-3 h-1 bg-pink-500 rounded-sm" />
+                      <span className="text-pink-300 font-bold">HYPOTHETICAL RELEASE</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 
@@ -486,7 +666,7 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
                 {/* Classification Callout Badge */}
                 <div className="absolute -top-7 left-0 px-2 py-0.5 rounded bg-cyan-500 text-[#070A10] font-mono text-[10px] font-black tracking-wider flex items-center gap-1 shadow-lg">
                   <Crosshair className="w-3 h-3" />
-                  <span>CANDIDATE SLICK: 87% CONFIDENCE</span>
+                  <span>CANDIDATE SLICK: {CANONICAL_CASE_0004_PREDICTION.confidence_pct}% CONFIDENCE</span>
                 </div>
               </div>
             </div>
@@ -496,13 +676,13 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
           <div className="h-10 px-6 bg-[#080C14] border-t border-white/10 flex items-center justify-between font-mono text-xs z-10">
             <div className="flex items-center gap-4 text-[11px]">
               <span className="text-zinc-500">PREDICTED CLASSES:</span>
-              <span className="text-cyan-400 font-bold">OIL: 0.87</span>
+              <span className="text-cyan-400 font-bold">OIL: {CANONICAL_CASE_0004_PREDICTION.oil_probability}</span>
               <span className="text-zinc-600">|</span>
-              <span className="text-zinc-400">LOOKALIKE: 0.09</span>
+              <span className="text-zinc-400">LOOKALIKE: {CANONICAL_CASE_0004_PREDICTION.lookalike_probability}</span>
               <span className="text-zinc-600">|</span>
-              <span className="text-zinc-500">NO_OIL: 0.04</span>
+              <span className="text-zinc-500">NO_OIL: {CANONICAL_CASE_0004_PREDICTION.no_oil_probability}</span>
             </div>
-            <span className="text-[10px] text-zinc-500">STATUS: POSSIBLE OIL-LIKE ANOMALY</span>
+            <span className="text-[10px] text-zinc-500">STATUS: PROTOTYPE BASELINE // CANDIDATE OIL SLICK</span>
           </div>
         </div>
       )}
@@ -576,80 +756,6 @@ export const SimulationPrimaryVisual: React.FC<SimulationPrimaryVisualProps> = (
         </div>
       )}
 
-      {/* ============================================================ */}
-      {/* 6. COUNTERFACTUAL STAGE 10: HYPOTHESIS TEST COMPARISON */}
-      {/* ============================================================ */}
-      {currentStepId === 'counterfactual' && (
-        <div className="relative w-full h-full flex flex-col bg-[#05070D] p-6 overflow-y-auto custom-scrollbar">
-          {/* Hypothesis Header Banner */}
-          <div className="p-4 rounded-xl bg-[#080C14] border border-cyan-500/30 font-mono text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
-            <div>
-              <div className="text-cyan-400 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
-                <GitCompare className="w-4 h-4 text-cyan-400" />
-                <span>SOURCE HYPOTHESIS TEST</span>
-              </div>
-              <p className="text-zinc-200 text-sm mt-1 font-sans">
-                Could a plausible release along MT NORDIC POLARIS&apos;s track produce the observed slick?
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded bg-emerald-500/15 border border-emerald-400 text-emerald-300 font-bold uppercase text-[11px]">
-                HYPOTHESIS SUPPORTED (83%)
-              </span>
-            </div>
-          </div>
-
-          {/* Dual Comparison Panels: Observed vs Simulated */}
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
-            {/* Panel A: Observed Slick Geometry */}
-            <div className="bg-[#080C14] border border-white/10 rounded-xl overflow-hidden flex flex-col">
-              <div className="px-4 py-2.5 bg-[#0A0E17] border-b border-white/10 font-mono text-xs flex items-center justify-between">
-                <span className="text-white font-bold">A. OBSERVED SAR SLICK</span>
-                <span className="text-zinc-500 text-[10px]">SAR OBSERVATION</span>
-              </div>
-              <div className="relative flex-1 p-4 flex items-center justify-center bg-[#060810]">
-                <img
-                  src="/prototype/case_0004/part1_oil_00004_slick_overlay.png"
-                  alt="Observed Slick"
-                  className="max-h-60 object-contain rounded border border-white/10"
-                />
-              </div>
-              <div className="p-3 bg-[#080C14] border-t border-white/10 font-mono text-[11px] text-zinc-400 space-y-0.5">
-                <div>Elongation Axis: <strong className="text-white">052° NE</strong></div>
-                <div>Area Extent: <strong className="text-white">4.41 km²</strong></div>
-                <div>Leading Edge: 55.244°N, 5.885°E</div>
-              </div>
-            </div>
-
-            {/* Panel B: Forward Simulated Release Plume */}
-            <div className="bg-[#080C14] border border-cyan-500/30 rounded-xl overflow-hidden flex flex-col">
-              <div className="px-4 py-2.5 bg-[#0A0E17] border-b border-white/10 font-mono text-xs flex items-center justify-between">
-                <span className="text-cyan-400 font-bold">B. SIMULATED RELEASE PLUME</span>
-                <span className="text-zinc-500 text-[10px]">GAUSSIAN-LAGRANGIAN</span>
-              </div>
-              <div className="relative flex-1 p-4 flex items-center justify-center bg-[#060810]">
-                {/* SVG Simulated Plume Rendering */}
-                <svg className="w-full h-48" viewBox="0 0 300 200">
-                  <rect width="100%" height="100%" fill="#070b14" />
-                  {/* Candidate Track Line */}
-                  <line x1="40" y1="160" x2="260" y2="40" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4, 4" />
-                  {/* Plume Envelope */}
-                  <ellipse cx="160" cy="95" rx="70" ry="25" transform="rotate(-32 160 95)" fill="#00f0ff" fillOpacity="0.25" stroke="#00f0ff" strokeWidth="1.5" />
-                  <ellipse cx="175" cy="85" rx="45" ry="14" transform="rotate(-32 175 85)" fill="#00f0ff" fillOpacity="0.4" />
-                  <text x="50" y="180" fill="#f59e0b" fontSize="9" fontFamily="monospace">VESSEL TRACK (054°)</text>
-                  <text x="140" y="50" fill="#00f0ff" fontSize="9" fontFamily="monospace">SIMULATED PLUME</text>
-                </svg>
-              </div>
-              <div className="p-3 bg-[#080C14] border-t border-white/10 font-mono text-[11px] text-zinc-400 space-y-0.5">
-                <div>Trajectory Consistency: <strong className="text-cyan-400">86%</strong></div>
-                <div>Shape Alignment: <strong className="text-cyan-400">79%</strong></div>
-                <div>Spatial Overlap: <strong className="text-cyan-400">81%</strong></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ============================================================ */}
       {/* 7. REPORT STAGE 12: DOCUMENT-STYLE INVESTIGATION SUMMARY */}

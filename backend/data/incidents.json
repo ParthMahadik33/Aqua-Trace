@@ -1,0 +1,256 @@
+{
+  "version": 1,
+  "updated_at": "2026-09-18T12:19:23.417823+00:00",
+  "count": 3,
+  "sequence_counter": 3,
+  "incidents": [
+    {
+      "incident_id": "INC-2026-IND-001",
+      "acquisition_id": "acq_api_test_01",
+      "product_id": "S1A_API_TEST_PROD_01",
+      "zone_id": "MALACCA_STRAIT",
+      "acquisition_time_utc": "2026-09-14T09:30:00Z",
+      "platform": null,
+      "instrument_mode": null,
+      "footprint": [
+        101.0,
+        2.0,
+        103.0,
+        4.0
+      ],
+      "footprint_geojson": null,
+      "candidate_geometry": null,
+      "candidate_area_km2": 1.95,
+      "candidate_centroid": [
+        102.0,
+        3.0
+      ],
+      "triage_status": "POSSIBLE_OIL",
+      "triage_source": "development_adapter",
+      "triage_mode": "DEVELOPMENT ADAPTER",
+      "triage_rationale": null,
+      "quality_result": null,
+      "policy_decision": {
+        "passed": true
+      },
+      "model_version": "development-adapter-v1",
+      "created_at": "2026-09-14T16:02:15.541622+00:00",
+      "updated_at": "2026-09-18T12:19:23.417823+00:00",
+      "investigation_state": "ACKNOWLEDGED",
+      "acknowledged_at": "2026-09-18T12:19:23.417823+00:00",
+      "notes": "Investigator assigned"
+    },
+    {
+      "incident_id": "INC-2026-IND-002",
+      "acquisition_id": "acq_033b591ef29a",
+      "product_id": "S1C_IW_GRDH_1SDV_20260913T231106_20260913T231135_009435_012C49_5E39_COG.SAFE",
+      "zone_id": "MALACCA_STRAIT",
+      "acquisition_time_utc": "2026-09-13T23:11:06Z",
+      "platform": "sentinel-1c",
+      "instrument_mode": "IW",
+      "footprint": [
+        97.05426755037098,
+        3.174493853234118,
+        99.61117462530909,
+        5.281211987336643
+      ],
+      "bbox": [
+        97.05426755037098,
+        3.174493853234118,
+        99.61117462530909,
+        5.281211987336643
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "urn:ogc:def:crs:OGC::CRS84"
+          }
+        },
+        "coordinates": [
+          [
+            [
+              99.61117462530909,
+              4.821686099627918
+            ],
+            [
+              98.50150553059966,
+              5.052881839941811
+            ],
+            [
+              97.3956429402758,
+              5.281211987336643
+            ],
+            [
+              97.3469405625452,
+              5.042932362670695
+            ],
+            [
+              97.30932254391921,
+              4.862010159838053
+            ],
+            [
+              97.26919406834489,
+              4.681603657334149
+            ],
+            [
+              97.22742934642338,
+              4.501533843926219
+            ],
+            [
+              97.18854997387864,
+              4.320860470814362
+            ],
+            [
+              97.11363952523106,
+              3.9589040046647015
+            ],
+            [
+              97.07534519676028,
+              3.778092486615638
+            ],
+            [
+              97.05426755037098,
+              3.6398009963806146
+            ],
+            [
+              98.15267169481953,
+              3.4098276536727017
+            ],
+            [
+              99.26979948060364,
+              3.174493853234118
+            ],
+            [
+              99.33634344238762,
+              3.4931964298768903
+            ],
+            [
+              99.61117462530909,
+              4.821686099627918
+            ]
+          ]
+        ]
+      },
+      "candidate_geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              98.31272,
+              4.20785
+            ],
+            [
+              98.35272,
+              4.20785
+            ],
+            [
+              98.35272,
+              4.24785
+            ],
+            [
+              98.31272,
+              4.24785
+            ],
+            [
+              98.31272,
+              4.20785
+            ]
+          ]
+        ]
+      },
+      "candidate_area_km2": 3.85,
+      "candidate_centroid": {
+        "lat": 4.22785,
+        "lon": 98.33272
+      },
+      "triage_status": "REVIEW",
+      "triage_source": "development_adapter",
+      "triage_mode": "DEVELOPMENT ADAPTER",
+      "triage_rationale": "DEVELOPMENT ADAPTER: Flagged for analyst verification. Simulated anomalous dark patch signature within monitored high-density shipping lane.",
+      "quality_result": {
+        "passed": true,
+        "checks": {
+          "metadata": {
+            "status": "PASS",
+            "detail": "Metadata verified for S1C_IW_GRDH_1SDV_20260913T231106_20260913T231135_009435_012C49_5E39_COG.SAFE (timestamp: 2026-09-13T23:11:06Z)."
+          },
+          "collection": {
+            "status": "PASS",
+            "detail": "Collection 'sentinel-1-grd' and mode 'IW' are supported."
+          },
+          "polarization": {
+            "status": "PASS",
+            "detail": "Polarization check passed. Contains required co-polarization: ['VV']."
+          },
+          "coverage": {
+            "status": "PASS",
+            "detail": "Spatial coverage verified: span 2.557° lon x 2.107° lat."
+          },
+          "aoi_overlap": {
+            "status": "PASS",
+            "detail": "Acquisition intersects target zone (overlap span: 2.557° lon x 2.107° lat)."
+          },
+          "nodata": {
+            "status": "UNAVAILABLE",
+            "detail": "Nodata / missing pixel statistics not provided in STAC metadata."
+          },
+          "wind": {
+            "status": "UNAVAILABLE",
+            "detail": "Live metocean wind observation not available for this acquisition."
+          }
+        },
+        "reasons": [],
+        "summary": "Acquisition passed all operational quality checks."
+      },
+      "policy_decision": "REVIEW",
+      "model_version": "development-adapter-v1",
+      "created_at": "2026-09-14T16:13:33.542313+00:00",
+      "updated_at": "2026-09-14T16:13:33.574533+00:00",
+      "investigation_state": "ACKNOWLEDGED",
+      "acknowledged_at": "2026-09-14T16:13:33.574533+00:00",
+      "notes": "Ops operator flagged for simulation"
+    },
+    {
+      "incident_id": "INC-2026-IND-003",
+      "acquisition_id": "acq_dynamic_test",
+      "product_id": "S1A_IW_GRDH_1SDV_20260914T120000_DYNAMIC_TEST",
+      "zone_id": "STRAIT_OF_MALACCA",
+      "acquisition_time_utc": null,
+      "platform": null,
+      "instrument_mode": null,
+      "footprint": [
+        101.7,
+        3.8,
+        101.8,
+        3.9
+      ],
+      "bbox": [
+        101.7,
+        3.8,
+        101.8,
+        3.9
+      ],
+      "footprint_geojson": null,
+      "candidate_geometry": null,
+      "candidate_area_km2": 5.25,
+      "candidate_centroid": [
+        101.75,
+        3.85
+      ],
+      "triage_status": "HIGH_CONFIDENCE_SLICK",
+      "triage_source": "development_adapter",
+      "triage_mode": "DEVELOPMENT ADAPTER",
+      "triage_rationale": null,
+      "quality_result": null,
+      "policy_decision": "REVIEW",
+      "model_version": "adapter-v1",
+      "created_at": "2026-09-14T18:30:40.200636+00:00",
+      "updated_at": "2026-09-14T18:30:40.200636+00:00",
+      "investigation_state": "NEW",
+      "acknowledged_at": null,
+      "notes": null
+    }
+  ]
+}

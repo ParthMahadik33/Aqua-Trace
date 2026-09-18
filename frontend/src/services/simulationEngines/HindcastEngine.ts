@@ -3,8 +3,8 @@ import { SimulationStatusTag, SourceReconstructionModel } from '@/types/simulati
 
 export interface HindcastInput {
   slickCentroid: { lat: number; lon: number };
-  slickAreaKm2: number;
-  observedTimestamp: string;
+  slickAreaKm2?: number;
+  observedTimestamp?: string;
   metoceanForcing: {
     windSpeedMs: number;
     windDirectionDeg: number;
@@ -14,91 +14,105 @@ export interface HindcastInput {
 }
 
 export interface HindcastParameters {
-  simulationHorizonHours: number;
-  timeStepMinutes: number;
-  windForcingModel: string;
-  currentForcingModel: string;
-  windageCoeffPercent: number;
-  diffusionDispersionM2s: number;
-  ensembleSize: number;
+  simulationHorizonHours?: number; // default: 18
+  timeStepMinutes?: number;
+  windForcingModel?: string;
+  currentForcingModel?: string;
+  windageCoeffPercent?: number; // default: 3%
+  diffusionDispersionM2s?: number;
+  ensembleSize?: number;
 }
 
 export class HindcastEngine
   implements SimulationEngineModule<HindcastInput, HindcastParameters, SourceReconstructionModel>
 {
   readonly moduleName = 'HindcastEngine';
-  readonly version = '3.0.0-lagrangian-ensemble';
-  readonly defaultStatusTag: SimulationStatusTag = 'SIMULATED HINDCAST';
+  readonly version = '3.1.0-lagrangian-backward';
+  readonly defaultStatusTag: SimulationStatusTag = 'DERIVED RESULT';
 
   execute(
     input: HindcastInput,
-    parameters: HindcastParameters
+    parameters: HindcastParameters = {}
   ): SimulationEngineOutput<HindcastInput, HindcastParameters, SourceReconstructionModel> {
-    const ensembleTrajectories = [
-      {
-        ensembleId: 1,
-        weight: 0.35,
-        color: '#10B981', // Mean ensemble (Emerald)
-        waypoints: [
-          { hoursAgo: 0, timestamp: '17:25Z', lat: 55.2443, lon: 5.8856, windVectorMs: 0.14, currentVectorMs: 0.35 },
-          { hoursAgo: 1.5, timestamp: '16:00Z', lat: 55.2312, lon: 5.8685, windVectorMs: 0.15, currentVectorMs: 0.36 },
-          { hoursAgo: 3.0, timestamp: '14:30Z', lat: 55.2168, lon: 5.8492, windVectorMs: 0.14, currentVectorMs: 0.34 },
-          { hoursAgo: 4.5, timestamp: '13:00Z', lat: 55.2015, lon: 5.8288, windVectorMs: 0.13, currentVectorMs: 0.32 },
-          { hoursAgo: 5.5, timestamp: '12:00Z', lat: 55.1884, lon: 5.8122, windVectorMs: 0.12, currentVectorMs: 0.31 },
-        ],
-      },
-      {
-        ensembleId: 2,
-        weight: 0.2,
-        color: '#34D399', // Higher windage +10%
-        waypoints: [
-          { hoursAgo: 0, timestamp: '17:25Z', lat: 55.2443, lon: 5.8856, windVectorMs: 0.16, currentVectorMs: 0.35 },
-          { hoursAgo: 1.5, timestamp: '16:00Z', lat: 55.2295, lon: 5.866, windVectorMs: 0.17, currentVectorMs: 0.36 },
-          { hoursAgo: 3.0, timestamp: '14:30Z', lat: 55.214, lon: 5.845, windVectorMs: 0.16, currentVectorMs: 0.34 },
-          { hoursAgo: 4.5, timestamp: '13:00Z', lat: 55.197, lon: 5.823, windVectorMs: 0.15, currentVectorMs: 0.32 },
-          { hoursAgo: 5.5, timestamp: '12:00Z', lat: 55.182, lon: 5.805, windVectorMs: 0.14, currentVectorMs: 0.31 },
-        ],
-      },
-      {
-        ensembleId: 3,
-        weight: 0.2,
-        color: '#6EE7B7', // Lower windage -10%
-        waypoints: [
-          { hoursAgo: 0, timestamp: '17:25Z', lat: 55.2443, lon: 5.8856, windVectorMs: 0.12, currentVectorMs: 0.35 },
-          { hoursAgo: 1.5, timestamp: '16:00Z', lat: 55.233, lon: 5.871, windVectorMs: 0.13, currentVectorMs: 0.36 },
-          { hoursAgo: 3.0, timestamp: '14:30Z', lat: 55.219, lon: 5.853, windVectorMs: 0.12, currentVectorMs: 0.34 },
-          { hoursAgo: 4.5, timestamp: '13:00Z', lat: 55.205, lon: 5.834, windVectorMs: 0.11, currentVectorMs: 0.32 },
-          { hoursAgo: 5.5, timestamp: '12:00Z', lat: 55.193, lon: 5.819, windVectorMs: 0.11, currentVectorMs: 0.31 },
-        ],
-      },
-      {
-        ensembleId: 4,
-        weight: 0.125,
-        color: '#A7F3D0', // Current perturbation North
-        waypoints: [
-          { hoursAgo: 0, timestamp: '17:25Z', lat: 55.2443, lon: 5.8856, windVectorMs: 0.14, currentVectorMs: 0.37 },
-          { hoursAgo: 1.5, timestamp: '16:00Z', lat: 55.2335, lon: 5.867, windVectorMs: 0.15, currentVectorMs: 0.38 },
-          { hoursAgo: 3.0, timestamp: '14:30Z', lat: 55.221, lon: 5.847, windVectorMs: 0.14, currentVectorMs: 0.36 },
-          { hoursAgo: 4.5, timestamp: '13:00Z', lat: 55.207, lon: 5.826, windVectorMs: 0.13, currentVectorMs: 0.34 },
-          { hoursAgo: 5.5, timestamp: '12:00Z', lat: 55.195, lon: 5.809, windVectorMs: 0.12, currentVectorMs: 0.33 },
-        ],
-      },
-      {
-        ensembleId: 5,
-        weight: 0.125,
-        color: '#059669', // Current perturbation South
-        waypoints: [
-          { hoursAgo: 0, timestamp: '17:25Z', lat: 55.2443, lon: 5.8856, windVectorMs: 0.14, currentVectorMs: 0.33 },
-          { hoursAgo: 1.5, timestamp: '16:00Z', lat: 55.2285, lon: 5.87, windVectorMs: 0.15, currentVectorMs: 0.34 },
-          { hoursAgo: 3.0, timestamp: '14:30Z', lat: 55.2125, lon: 5.851, windVectorMs: 0.14, currentVectorMs: 0.32 },
-          { hoursAgo: 4.5, timestamp: '13:00Z', lat: 55.196, lon: 5.831, windVectorMs: 0.13, currentVectorMs: 0.3 },
-          { hoursAgo: 5.5, timestamp: '12:00Z', lat: 55.182, lon: 5.815, windVectorMs: 0.12, currentVectorMs: 0.29 },
-        ],
-      },
+    const horizonHours = parameters.simulationHorizonHours ?? 18.0;
+    const originLat = input.slickCentroid.lat;
+    const originLon = input.slickCentroid.lon;
+
+    const wSpeed = input.metoceanForcing?.windSpeedMs ?? 4.8;
+    const wDir = input.metoceanForcing?.windDirectionDeg ?? 245.0;
+    const cSpeed = input.metoceanForcing?.currentVelocityMs ?? 0.35;
+    const cDir = input.metoceanForcing?.currentDirectionDeg ?? 112.0;
+
+    const leeway = (parameters.windageCoeffPercent ?? 3.0) / 100.0;
+
+    // 5-member stochastic ensemble perturbations
+    const perturbations = [
+      { id: 1, weight: 0.35, color: '#10B981', leewayMult: 1.0, angleOffset: 0.0 },
+      { id: 2, weight: 0.20, color: '#34D399', leewayMult: 1.15, angleOffset: 2.0 },
+      { id: 3, weight: 0.20, color: '#6EE7B7', leewayMult: 0.85, angleOffset: -2.0 },
+      { id: 4, weight: 0.125, color: '#A7F3D0', leewayMult: 1.05, angleOffset: 5.0 },
+      { id: 5, weight: 0.125, color: '#059669', leewayMult: 0.95, angleOffset: -5.0 },
     ];
 
+    const timeSteps = [0.0, 1.5, 3.0, 4.5, 5.5, 9.0, 12.0, horizonHours];
+    const ensembleTrajectories = perturbations.map((p) => {
+      const effLeeway = leeway * p.leewayMult;
+      const effDirRad = (((cDir + p.angleOffset) % 360) * Math.PI) / 180.0;
+      const windRad = (wDir * Math.PI) / 180.0;
+
+      // Maritime navigation course to (u, v) in m/s
+      const cU = cSpeed * Math.sin(effDirRad);
+      const cV = cSpeed * Math.cos(effDirRad);
+      const wU = wSpeed * effLeeway * Math.sin(windRad);
+      const wV = wSpeed * effLeeway * Math.cos(windRad);
+
+      // Negative timestep advection (backward drift)
+      const uBack = -(cU + wU);
+      const vBack = -(cV + wV);
+
+      let currLat = originLat;
+      let currLon = originLon;
+      let prevH = 0.0;
+
+      const waypoints = timeSteps.map((h, idx) => {
+        const dtSec = (h - prevH) * 3600.0;
+        prevH = h;
+
+        const dLat = (vBack * dtSec) / 111139.0;
+        const cosLat = Math.cos((currLat * Math.PI) / 180.0);
+        const dLon = (uBack * dtSec) / (111139.0 * Math.max(0.01, cosLat));
+
+        currLat += dLat;
+        currLon += dLon;
+
+        return {
+          hoursAgo: h,
+          timestamp: h === 0 ? '17:25Z' : `T-${h.toFixed(1)}h`,
+          lat: Math.round(currLat * 10000) / 10000,
+          lon: Math.round(currLon * 10000) / 10000,
+          windVectorMs: Math.round(wSpeed * effLeeway * 100) / 100,
+          currentVectorMs: Math.round(cSpeed * 100) / 100,
+        };
+      });
+
+      return {
+        ensembleId: p.id,
+        weight: p.weight,
+        color: p.color,
+        waypoints,
+      };
+    });
+
+    // Compute mean origin centroid at peak release window (index 4 = 5.5 hours ago)
+    const peakIdx = 4;
+    const meanOriginLat = ensembleTrajectories.reduce((acc, t) => acc + t.waypoints[peakIdx].lat * t.weight, 0);
+    const meanOriginLon = ensembleTrajectories.reduce((acc, t) => acc + t.waypoints[peakIdx].lon * t.weight, 0);
+
     const result: SourceReconstructionModel = {
-      originCentroid: { lat: 55.1884, lon: 5.8122 },
+      originCentroid: {
+        lat: Math.round(meanOriginLat * 10000) / 10000,
+        lon: Math.round(meanOriginLon * 10000) / 10000,
+      },
       originEllipse: {
         semiMajorNm: 1.4,
         semiMinorNm: 0.75,
@@ -113,7 +127,15 @@ export class HindcastEngine
       bonnDescription: 'Metallic / Discontinuous True Oil Colors',
       sourceConfidenceScore: 92.4,
       sourceHypothesisStatus: 'SOURCE HYPOTHESIS (UNVERIFIED CORRIDOR)',
-      parameters,
+      parameters: {
+        simulationHorizonHours: parameters.simulationHorizonHours ?? 18,
+        timeStepMinutes: parameters.timeStepMinutes ?? 15,
+        windForcingModel: parameters.windForcingModel ?? 'ECMWF ERA5 Reanalysis [Simulated]',
+        currentForcingModel: parameters.currentForcingModel ?? 'Copernicus Marine GLORYS12 [Simulated]',
+        windageCoeffPercent: parameters.windageCoeffPercent ?? 3.0,
+        diffusionDispersionM2s: parameters.diffusionDispersionM2s ?? 12.5,
+        ensembleSize: parameters.ensembleSize ?? 5,
+      },
       ensembleTrajectories,
       trajectoryPoints: ensembleTrajectories[0].waypoints.map((w) => ({
         hoursAgo: w.hoursAgo,
@@ -134,13 +156,13 @@ export class HindcastEngine
       result,
       confidence: 92.4,
       evidence: [
-        '5-member Lagrangian ensemble converged on release window 11:45–13:20 UTC (4.5–5.5 hours prior to observation).',
-        'Calculated origin locus centroid: 55.1884°N, 5.8122°E with 1.4 nm × 0.75 nm confidence ellipse.',
-        'Spill volume estimate (180–250 m³) derived using Bonn Agreement appearance code 4 thickness metrics.',
+        `5-member Lagrangian backward ensemble integrated across ${horizonHours}h horizon.`,
+        `Calculated origin locus centroid: ${result.originCentroid.lat}°N, ${result.originCentroid.lon}°E.`,
+        'Reversed advection applies 3.0% wind leeway and surface current vector forcing.',
       ],
       sourceStatus: this.defaultStatusTag,
       interpretiveNotes:
-        'Output constitutes an investigative SOURCE HYPOTHESIS derived from hydrodynamic backward modeling, not a physically confirmed origin location.',
+        'LAGRANGIAN PROTOTYPE: ENSEMBLE SOURCE RECONSTRUCTION. Output constitutes an investigative hypothesis derived from reverse drift modeling, not an operational hydrodynamic hindcast.',
     };
   }
 }

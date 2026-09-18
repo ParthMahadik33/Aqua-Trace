@@ -46,6 +46,8 @@ interface SimulationMapWrapperProps {
     fisheries: boolean;
     population: boolean;
   };
+  dynamicCounterfactual?: any;
+  counterfactualTimelineStep?: number;
 }
 
 export const SimulationMapWrapper: React.FC<SimulationMapWrapperProps> = (props) => {

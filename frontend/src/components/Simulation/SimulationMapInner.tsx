@@ -25,6 +25,7 @@ import {
 } from '@/types/simulation';
 import { AisCorrelationMapLayer } from './AisCorrelationMapLayer';
 import { ImpactForecastMapLayer } from './ImpactForecastMapLayer';
+import { CounterfactualMapLayer } from './CounterfactualMapLayer';
 
 // Fix standard Leaflet default icon issues in bundlers
 delete (L.Icon.Default.prototype as { _getIconUrl?: string })._getIconUrl;
@@ -53,44 +54,75 @@ interface SimulationMapInnerProps {
     fisheries: boolean;
     population: boolean;
   };
+  dynamicCounterfactual?: any;
+  counterfactualTimelineStep?: number;
 }
 
-// Controller for camera view transitions per simulation step
-function SimulationCameraController({ stepId }: { stepId: SimulationStepId }) {
+// Controller for camera view transitions per simulation step (derived from active incident geometry)
+function SimulationCameraController({
+  stepId,
+  sarMetadata,
+  sourceRecon,
+  selectedCandidate,
+  dynamicCenter,
+}: {
+  stepId: SimulationStepId;
+  sarMetadata: SarMetadata;
+  sourceRecon: SourceReconstructionModel;
+  selectedCandidate?: CandidateVessel | null;
+  dynamicCenter?: [number, number];
+}) {
   const map = useMap();
 
   useEffect(() => {
+    const slickLat = dynamicCenter?.[0] ?? sarMetadata.slickBbox.centerLat ?? 55.2443;
+    const slickLon = dynamicCenter?.[1] ?? sarMetadata.slickBbox.centerLon ?? 5.8856;
+    const slickCenter: [number, number] = [slickLat, slickLon];
+
+    const sceneLat = (sarMetadata.geographicBbox.minLat + sarMetadata.geographicBbox.maxLat) / 2;
+    const sceneLon = (sarMetadata.geographicBbox.minLon + sarMetadata.geographicBbox.maxLon) / 2;
+    const sceneCenter: [number, number] = [sceneLat, sceneLon];
+
+    const originLat = sourceRecon?.originCentroid?.lat ?? (slickLat - 0.05);
+    const originLon = sourceRecon?.originCentroid?.lon ?? (slickLon - 0.07);
+    const originCenter: [number, number] = [originLat, originLon];
+
+    const vesselWp = selectedCandidate?.trackWaypoints?.[0];
+    const vesselLat = vesselWp?.lat ?? (selectedCandidate as any)?.lat ?? originLat;
+    const vesselLon = vesselWp?.lon ?? (selectedCandidate as any)?.lon ?? originLon;
+    const vesselPos: [number, number] = [vesselLat, vesselLon];
+
     switch (stepId) {
       case 'surveillance':
-        map.flyTo([55.25, 5.88], 8, { duration: 1.2 });
+        map.flyTo(sceneCenter, 8, { duration: 1.2 });
         break;
       case 'sar_acquisition':
       case 'sar_processing':
       case 'detection':
-        map.flyTo([55.251, 5.875], 11, { duration: 1.2 });
+        map.flyTo(slickCenter, 11, { duration: 1.2 });
         break;
       case 'segmentation':
-        map.flyTo([55.244, 5.885], 12, { duration: 1.2 });
+        map.flyTo(slickCenter, 12, { duration: 1.2 });
         break;
       case 'environmental':
-        map.flyTo([55.24, 5.88], 10, { duration: 1.2 });
+        map.flyTo(slickCenter, 10, { duration: 1.2 });
         break;
       case 'source_reconstruction':
-        map.flyTo([55.215, 5.845], 11, { duration: 1.2 });
+        map.flyTo(originCenter, 11, { duration: 1.2 });
         break;
       case 'ais_correlation':
       case 'attribution':
       case 'counterfactual':
-        map.flyTo([55.20, 5.83], 11, { duration: 1.2 });
+        map.flyTo(vesselPos, 11, { duration: 1.2 });
         break;
       case 'impact_prioritization':
-        map.flyTo([55.22, 6.05], 9, { duration: 1.5 });
+        map.flyTo(slickCenter, 9, { duration: 1.5 });
         break;
       case 'report':
-        map.flyTo([55.22, 5.92], 10, { duration: 1.2 });
+        map.flyTo(slickCenter, 10, { duration: 1.2 });
         break;
     }
-  }, [stepId, map]);
+  }, [stepId, map, dynamicCenter, sarMetadata, sourceRecon, selectedCandidate]);
 
   return null;
 }
@@ -114,6 +146,8 @@ export const SimulationMapInner: React.FC<SimulationMapInnerProps> = ({
     fisheries: false,
     population: false,
   },
+  dynamicCounterfactual,
+  counterfactualTimelineStep = 0,
 }) => {
   const sarBounds: [[number, number], [number, number]] = [
     [sarMetadata.geographicBbox.minLat, sarMetadata.geographicBbox.minLon],
@@ -124,6 +158,12 @@ export const SimulationMapInner: React.FC<SimulationMapInnerProps> = ({
     [sarMetadata.slickBbox.minLat, sarMetadata.slickBbox.minLon],
     [sarMetadata.slickBbox.maxLat, sarMetadata.slickBbox.maxLon],
   ];
+
+  // Derive dynamic geographic center for non-German Bight incidents
+  const dynamicCenter: [number, number] | undefined =
+    dynamicCounterfactual?.isDynamic && sarMetadata.slickBbox?.centerLat
+      ? [sarMetadata.slickBbox.centerLat, sarMetadata.slickBbox.centerLon]
+      : undefined;
 
   // Overlay URL based on mode
   let overlayImageUrl: string | null = null;
@@ -141,9 +181,8 @@ export const SimulationMapInner: React.FC<SimulationMapInnerProps> = ({
   const primarySuspect = candidates.find((c) => c.isPrimarySuspect) || candidates[0];
 
   return (
-    <div className="relative w-full h-full bg-[#070A10]">
       <MapContainer
-        center={[55.25, 5.88]}
+        center={[sarMetadata.slickBbox.centerLat, sarMetadata.slickBbox.centerLon]}
         zoom={9}
         minZoom={4}
         maxZoom={16}
@@ -158,7 +197,13 @@ export const SimulationMapInner: React.FC<SimulationMapInnerProps> = ({
           attribution="&copy; Esri &mdash; Esri, DeLorme, NAVTEQ"
         />
 
-        <SimulationCameraController stepId={currentStepId} />
+        <SimulationCameraController
+          stepId={currentStepId}
+          sarMetadata={sarMetadata}
+          sourceRecon={sourceRecon}
+          selectedCandidate={selectedCandidate}
+          dynamicCenter={dynamicCenter}
+        />
 
         {/* 1. Sentinel-1 SAR Acquisition Footprint */}
         <Rectangle
@@ -243,11 +288,11 @@ export const SimulationMapInner: React.FC<SimulationMapInnerProps> = ({
         {/* 4. Metocean Wind & Current Vectors (Environmental Step & later) */}
         {(currentStepId === 'environmental' || currentStepId === 'report') && (
           <>
-            {/* Wind Vector Arrow (From 245° WSW blowing toward 065° ENE) */}
+            {/* Wind Vector Arrow (Calculated dynamically around active slick center) */}
             <Polyline
               positions={[
-                [55.20, 5.80],
-                [55.23, 5.92],
+                [sarMetadata.slickBbox.centerLat - 0.04, sarMetadata.slickBbox.centerLon - 0.08],
+                [sarMetadata.slickBbox.centerLat - 0.01, sarMetadata.slickBbox.centerLon + 0.04],
               ]}
               pathOptions={{
                 color: '#38BDF8',
@@ -257,16 +302,16 @@ export const SimulationMapInner: React.FC<SimulationMapInnerProps> = ({
             >
               <Tooltip permanent direction="right" className="tactical-tooltip">
                 <div className="px-2 py-1 rounded bg-[#071324]/90 border border-sky-400/40 text-sky-300 font-mono text-[10px]">
-                  WIND: 4.8 m/s (9.3 kn) FROM 245° WSW [SIMULATED INPUT]
+                  WIND: {metocean?.windSpeedMs ?? 4.8} m/s ({((metocean?.windSpeedMs ?? 4.8) * 1.94384).toFixed(1)} kn) FROM {metocean?.windDirectionDeg ?? 245}° [CASE REPLAY METOCEAN]
                 </div>
               </Tooltip>
             </Polyline>
 
-            {/* Tidal Current Vector (Setting toward 065° ENE) */}
+            {/* Surface Current Vector */}
             <Polyline
               positions={[
-                [55.22, 5.82],
-                [55.24, 5.90],
+                [sarMetadata.slickBbox.centerLat - 0.02, sarMetadata.slickBbox.centerLon - 0.06],
+                [sarMetadata.slickBbox.centerLat, sarMetadata.slickBbox.centerLon + 0.02],
               ]}
               pathOptions={{
                 color: '#34D399',
@@ -275,7 +320,7 @@ export const SimulationMapInner: React.FC<SimulationMapInnerProps> = ({
             >
               <Tooltip permanent direction="bottom" className="tactical-tooltip">
                 <div className="px-2 py-1 rounded bg-[#061814]/90 border border-emerald-400/40 text-emerald-300 font-mono text-[10px]">
-                  CURRENT: 0.35 m/s (0.68 kn) SET 065° ENE [SIMULATED INPUT]
+                  CURRENT: {metocean?.currentVelocityMs ?? 0.35} m/s ({((metocean?.currentVelocityMs ?? 0.35) * 1.94384).toFixed(2)} kn) SET {metocean?.currentDirectionDeg ?? 112}° [CASE REPLAY METOCEAN]
                 </div>
               </Tooltip>
             </Polyline>
@@ -422,28 +467,36 @@ export const SimulationMapInner: React.FC<SimulationMapInnerProps> = ({
         )}
 
         {/* 7. Counterfactual Simulated Release Plume (Step 10 Counterfactual) */}
-        {(currentStepId === 'counterfactual' || currentStepId === 'report') && (
-          <>
-            <Rectangle
-              bounds={[
-                [55.195, 5.860],
-                [55.285, 5.902],
-              ]}
-              pathOptions={{
-                color: '#10B981',
-                weight: 2,
-                dashArray: '4, 4',
-                fillOpacity: 0.2,
-                fillColor: '#059669',
-              }}
-            >
-              <Tooltip permanent direction="right" className="tactical-tooltip">
-                <div className="px-2 py-1 rounded bg-[#061810]/95 border border-emerald-400 text-emerald-300 font-mono text-[10px]">
-                  SIMULATED RELEASE PLUME // 91.4% DICE OVERLAP
-                </div>
-              </Tooltip>
-            </Rectangle>
-          </>
+        {currentStepId === 'counterfactual' && (
+          <CounterfactualMapLayer
+            sarMetadata={sarMetadata}
+            candidates={candidates}
+            selectedCandidate={selectedCandidate}
+            dynamicCounterfactual={dynamicCounterfactual}
+            counterfactualTimelineStep={counterfactualTimelineStep}
+            counterfactual={counterfactual}
+          />
+        )}
+        {currentStepId === 'report' && (
+          <Rectangle
+            bounds={[
+              [55.195, 5.860],
+              [55.285, 5.902],
+            ]}
+            pathOptions={{
+              color: '#10B981',
+              weight: 2,
+              dashArray: '4, 4',
+              fillOpacity: 0.2,
+              fillColor: '#059669',
+            }}
+          >
+            <Tooltip permanent direction="right" className="tactical-tooltip">
+              <div className="px-2 py-1 rounded bg-[#061810]/95 border border-emerald-400 text-emerald-300 font-mono text-[10px]">
+                SIMULATED RELEASE PLUME // 91.4% DICE OVERLAP
+              </div>
+            </Tooltip>
+          </Rectangle>
         )}
 
         {/* 8A. Interactive Forward Impact Forecast (Stage 11) */}
@@ -505,7 +558,6 @@ export const SimulationMapInner: React.FC<SimulationMapInnerProps> = ({
           </>
         )}
       </MapContainer>
-    </div>
   );
 };
 

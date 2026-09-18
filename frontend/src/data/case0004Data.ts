@@ -1,19 +1,136 @@
 import {
-  SimulationStepConfig,
   SarMetadata,
-  SurveillanceFeedItem,
-  SarVisualStage,
   MetoceanContext,
   SourceReconstructionModel,
-  AisFunnelStep,
   CandidateVessel,
-  CounterfactualTestResult,
-  CounterfactualScenario,
   ImpactPrioritization,
+  IncidentReportDossier,
   EvidenceGraphNode,
   EvidenceGraphEdge,
-  IncidentReportDossier,
+  SurveillanceFeedItem,
+  SarVisualStage,
+  AisFunnelStep,
+  CounterfactualTestResult,
+  CounterfactualScenario,
+  SimulationStepConfig,
 } from '@/types/simulation';
+
+export interface CanonicalPrediction {
+  oil_probability: number;
+  lookalike_probability: number;
+  no_oil_probability: number;
+  confidence_pct: number;
+  predicted_class: 'OIL' | 'LOOKALIKE' | 'NO_OIL';
+  model_name: string;
+  input_channels: string;
+  mode: string;
+  development_validation: {
+    macro_f1: number;
+    accuracy: number;
+    oil_recall: number;
+    lookalike_recall: number;
+    no_oil_recall: number;
+    dominant_error: string;
+  };
+}
+
+export const CANONICAL_CASE_0004_PREDICTION: CanonicalPrediction = {
+  oil_probability: 0.987,
+  lookalike_probability: 0.011,
+  no_oil_probability: 0.002,
+  confidence_pct: 98.7,
+  predicted_class: 'OIL',
+  model_name: 'ConvNeXt-Tiny',
+  input_channels: 'Sentinel-1 VV + VH (2 channels)',
+  mode: 'SIMULATED (Prototype Baseline)',
+  development_validation: {
+    macro_f1: 0.6471,
+    accuracy: 68.29,
+    oil_recall: 85.0,
+    lookalike_recall: 67.88,
+    no_oil_recall: 39.42,
+    dominant_error: 'No-Oil -> Oil (71 cases)',
+  },
+};
+
+export interface AttributionFactorItem {
+  label: string;
+  score: number;
+  weight: number;
+  assessment: string;
+  isWarning?: boolean;
+}
+
+export interface CanonicalAttribution {
+  vesselName: string;
+  mmsi: string;
+  imo: string;
+  attributionScore: number;
+  decisionLabel: string;
+  factors: {
+    spatial: AttributionFactorItem;
+    temporal: AttributionFactorItem;
+    trajectory: AttributionFactorItem;
+    anomaly: AttributionFactorItem;
+    metocean: AttributionFactorItem;
+  };
+  hypothesis: string;
+  supportingEvidence: string[];
+}
+
+export function computeWeightedAttributionScore(factors: Record<string, AttributionFactorItem>): number {
+  const sum = Object.values(factors).reduce((acc, f) => acc + f.score * f.weight, 0);
+  return Math.round(sum * 10) / 10;
+}
+
+export const CANONICAL_CASE_0004_ATTRIBUTION: CanonicalAttribution = {
+  vesselName: 'MT NORDIC POLARIS',
+  mmsi: '244710000',
+  imo: '9382100',
+  attributionScore: 94.2,
+  decisionLabel: 'PRIORITIZE FOR INVESTIGATION',
+  factors: {
+    spatial: {
+      label: 'Spatial Proximity',
+      score: 96,
+      weight: 0.30,
+      assessment: 'Closest point of approach (CPA) 0.38 nm from backward-drift centroid.',
+    },
+    temporal: {
+      label: 'Temporal Compatibility',
+      score: 98,
+      weight: 0.25,
+      assessment: 'Corridor transit at 12:35 UTC matches estimated 11:45–13:20 UTC release window.',
+    },
+    trajectory: {
+      label: 'Trajectory Alignment',
+      score: 92,
+      weight: 0.20,
+      assessment: 'Heading 054° aligns within 2° of 052° slick elongation axis.',
+    },
+    anomaly: {
+      label: 'Kinematic Anomaly',
+      score: 91,
+      weight: 0.15,
+      assessment: 'Unexplained speed reduction from 14.7 to 12.4 kn across release sector.',
+      isWarning: true,
+    },
+    metocean: {
+      label: 'Metocean Consistency',
+      score: 88.5,
+      weight: 0.10,
+      assessment: 'Current (0.35 m/s @ 112°) and wind leeway (4.8 m/s @ 245°) physically explain slick drift.',
+    },
+  },
+  hypothesis:
+    'MT NORDIC POLARIS exhibits high kinematic and spatio-temporal correlation consistent with a suspected operational release.',
+  supportingEvidence: [
+    'Track directly intersects backward-drift source corridor at 12:35 UTC (0.38 nm CPA).',
+    'Unexplained speed reduction of 2.3 knots coincides with release sector.',
+    'Vessel heading vector (054°) correlates with morphological major axis of oil slick (052°).',
+    'Vessel departed Rotterdam in ballast; chemical/oil products tanker profile.',
+  ],
+};
 
 export const CASE_0004_SAR_METADATA: SarMetadata = {
   sampleId: 'part1_oil_00004',
@@ -648,10 +765,10 @@ export const CASE_0004_IMPACT: ImpactPrioritization = {
     'Juvenile Atlantic Herring and Plaice benthic nurseries',
   ],
   recommendedActionPlan: [
-    'Issue formal MARPOL Annex I violation notice to Flag State Administration (Netherlands) & Port of Gothenburg.',
+    'Issue formal MARPOL Annex I inquiry notice to Flag State Administration (Netherlands) & Port of Gothenburg.',
     'Dispatch regional emergency response tugs with 1,200m high-speed oil containment booms.',
-    'Notify EMSA CleanSeaNet operational desk of verified deliberate discharge incident.',
-    'Preserve radar raw backscatter data and AIS timestamp chain-of-custody for judicial proceedings.',
+    'Notify EMSA CleanSeaNet operational desk of suspected operational release incident.',
+    'Preserve radar raw backscatter data and AIS timestamp chain-of-custody for administrative review.',
   ],
   uncertaintyFactors: [
     'Hydrodynamic dispersion assumes stable 4.8 m/s WSW wind; sudden frontal shifts will alter landfall time.',
@@ -828,7 +945,7 @@ export const CASE_0004_REPORT: IncidentReportDossier = {
   cryptographicEvidenceHash:
     'SHA256:7f8a91c30e42d88190bcfa12a55018f760991823bb9e3427814bfa4d8123c89a',
   executiveSummary:
-    'On 2018-08-03 at 17:25:51 UTC, Copernicus Sentinel-1A SAR satellite acquisition identified a major illegal hydrocarbon discharge spanning 4.41 km² (44,049 pixels) in the North Sea / German Bight corridor. Forensic reverse Lagrangian drift reconstruction established the discharge event occurred between 11:45 and 13:20 UTC at 55.188°N, 5.812°E. High-confidence spatio-temporal AIS correlation and kinematic anomaly detection identified chemical/oil products tanker MT NORDIC POLARIS (IMO 9382100) with a 94.2% attribution score, showing direct track intersection (0.38 nm), course alignment (054° vs 052°), and a deliberate speed dip during unballasting / tank-washing discharge.',
+    'On 2018-08-03 at 17:25:51 UTC, Copernicus Sentinel-1A SAR satellite acquisition identified a suspected operational hydrocarbon release spanning 4.41 km² (44,049 pixels) in the North Sea / German Bight corridor. Forensic reverse Lagrangian drift reconstruction established the release event occurred between 11:45 and 13:20 UTC at 55.188°N, 5.812°E. High-confidence spatio-temporal AIS correlation and kinematic anomaly detection identified chemical/oil products tanker MT NORDIC POLARIS (IMO 9382100) with a 94.2% attribution score, showing direct track intersection (0.38 nm), course alignment (054° vs 052°), and an unexplained speed reduction consistent with potential slow-steaming operational release.',
   vesselOfInterestParticulars: {
     name: 'MT NORDIC POLARIS',
     imo: '9382100',
@@ -1121,7 +1238,7 @@ export const SIMULATION_STEPS: SimulationStepConfig[] = [
       'Model Attribution Score: 94.2% (High Correlation Hypothesis).',
       'Speed Anomaly: Recorded sharp 2.3 kn speed reduction exactly across release envelope.',
       'Course Alignment: Vessel heading 054° matches 052° slick tail orientation within 2°.',
-      'Status: MODEL ESTIMATE // ANALYST REVIEW REQUIRED (Investigative hypothesis, not guilt).',
+      'Status: MODEL ESTIMATE // ANALYST REVIEW REQUIRED (Investigative hypothesis, not judicial determination).',
     ],
     primaryMetrics: [
       { label: 'ATTRIBUTION SCORE', value: '94.2%', sublabel: 'Model Estimate', highlight: true, color: '#F43F5E' },

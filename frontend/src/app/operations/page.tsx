@@ -38,6 +38,41 @@ export default function LiveOperationsPage() {
   const [isSarPanelOpen, setIsSarPanelOpen] = useState<boolean>(true); // Default open on landing to showcase SAR capabilities
   const [isSelectingAoi, setIsSelectingAoi] = useState<boolean>(false);
 
+  // Autonomous screening incident banner state
+  const [activeIncident, setActiveIncident] = useState<{
+    incident_id: string;
+    product_id: string;
+    zone_id: string;
+    acquisition_time_utc: string;
+    triage_status: string;
+    model_version: string;
+  } | null>(null);
+  const [isAlertDismissed, setIsAlertDismissed] = useState<boolean>(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLatestIncident = async () => {
+      try {
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+        const res = await fetch(`${backendUrl}/api/incidents?limit=1`);
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data.incidents && data.incidents.length > 0) {
+            setActiveIncident(data.incidents[0]);
+          }
+        }
+      } catch {
+        // Backend offline or polling
+      }
+    };
+    fetchLatestIncident();
+    const timer = setInterval(fetchLatestIncident, 12000);
+    return () => {
+      isMounted = false;
+      clearInterval(timer);
+    };
+  }, []);
+
   // Active sector preset key
   const activePreset = systemStatus?.preset || 'ALL_INDIA';
 
@@ -175,6 +210,40 @@ export default function LiveOperationsPage() {
         isSelectingAoi={isSelectingAoi}
         onToggleSelectAoi={() => setIsSelectingAoi((prev) => !prev)}
       />
+
+      {/* Autonomous Screening Alert Banner */}
+      {activeIncident && !isAlertDismissed && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[650] flex items-center gap-3 px-4 py-2.5 rounded-xl bg-[#080C14]/95 border border-amber-500/60 text-amber-300 font-mono text-xs shadow-2xl shadow-amber-950/60 backdrop-blur-md transition-all">
+          <div className="relative flex items-center justify-center w-5 h-5 rounded bg-amber-500/20 text-amber-400">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+          </div>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+            <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px] tracking-wider uppercase border border-amber-400/40">
+              AUTONOMOUS SCREENING
+            </span>
+            <span className="text-zinc-200">
+              New candidate investigation created:{' '}
+              <strong className="text-amber-300 font-bold">{activeIncident.incident_id}</strong>
+            </span>
+          </div>
+          <div className="flex items-center gap-2 ml-2">
+            <a
+              href={`/simulation?incidentId=${encodeURIComponent(activeIncident.incident_id)}`}
+              className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-md shadow-amber-500/20 transition-all flex items-center gap-1 cursor-pointer tracking-wider"
+            >
+              <span>OPEN INVESTIGATION</span>
+            </a>
+            <button
+              onClick={() => setIsAlertDismissed(true)}
+              className="p-1 rounded text-zinc-500 hover:text-zinc-300 hover:bg-white/10 transition-colors cursor-pointer"
+              title="Dismiss Alert"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Interactive AOI Mode Top HUD Banner */}
       {isSelectingAoi && (

@@ -111,5 +111,89 @@ SENTINEL_HUB_PROCESS_URL = os.getenv(
 # Format: [min_lon, min_lat, max_lon, max_lat] in WGS84 coordinates
 DEFAULT_SENTINEL1_BBOX = [99.5, 1.0, 104.5, 6.0]
 
+# Autonomous Screening & Acquisition Registry Configuration
+DATA_DIR = Path(__file__).resolve().parent / "data"
+ACQUISITIONS_REGISTRY_PATH = os.getenv(
+    "ACQUISITIONS_REGISTRY_PATH",
+    str(DATA_DIR / "acquisitions.json")
+)
+
+# Supported SAR specifications
+SUPPORTED_SAR_COLLECTIONS = [
+    col.strip() for col in os.getenv("SUPPORTED_SAR_COLLECTIONS", "sentinel-1-grd").split(",") if col.strip()
+]
+REQUIRED_SAR_POLARIZATIONS = [
+    pol.strip().upper() for pol in os.getenv("REQUIRED_SAR_POLARIZATIONS", "VV").split(",") if pol.strip()
+]
+ALLOWED_SAR_INSTRUMENT_MODES = [
+    mode.strip().upper() for mode in os.getenv("ALLOWED_SAR_INSTRUMENT_MODES", "IW,EW,SM").split(",") if mode.strip()
+]
+
+# Operational screening thresholds (configurable screening rules, not hardcoded physical laws)
+SCREENING_MIN_WIND_MS = float(os.getenv("SCREENING_MIN_WIND_MS", "3.0"))
+SCREENING_MAX_WIND_MS = float(os.getenv("SCREENING_MAX_WIND_MS", "10.0"))
+MAX_NODATA_PERCENT = float(os.getenv("MAX_NODATA_PERCENT", "50.0"))
+MIN_SPATIAL_SPAN_DEG = float(os.getenv("MIN_SPATIAL_SPAN_DEG", "0.02"))
+
+# Autonomous Screening Monitoring Zones (WGS84 [min_lon, min_lat, max_lon, max_lat])
+SCREENING_ZONES = {
+    "MALACCA_STRAIT": {
+        "zone_id": "MALACCA_STRAIT",
+        "name": "Malacca Strait Corridor",
+        "bbox": [99.5, 1.0, 104.5, 6.0],
+        "priority": 1,
+        "enabled": True,
+    },
+    "MUMBAI_GUJARAT": {
+        "zone_id": "MUMBAI_GUJARAT",
+        "name": "Mumbai / Gujarat Corridor",
+        "bbox": [68.5, 18.0, 73.5, 23.5],
+        "priority": 1,
+        "enabled": True,
+    },
+    "CHENNAI_VIZAG": {
+        "zone_id": "CHENNAI_VIZAG",
+        "name": "Chennai / Vizag Corridor",
+        "bbox": [79.5, 12.5, 84.5, 18.2],
+        "priority": 2,
+        "enabled": True,
+    },
+    "KANDLA_MUNDRA": {
+        "zone_id": "KANDLA_MUNDRA",
+        "name": "Kandla / Mundra Corridor",
+        "bbox": [68.2, 21.5, 71.0, 23.5],
+        "priority": 2,
+        "enabled": True,
+    },
+    "STRAIT_OF_HORMUZ": {
+        "zone_id": "STRAIT_OF_HORMUZ",
+        "name": "Gulf / Strait of Hormuz",
+        "bbox": [54.0, 23.5, 59.5, 27.5],
+        "priority": 2,
+        "enabled": True,
+    },
+}
+
+# Screening Worker Orchestration Settings
+SCREENING_INTERVAL_SEC = float(os.getenv("SCREENING_INTERVAL_SEC", "300.0"))
+SCREENING_OVERLAP_HOURS = float(os.getenv("SCREENING_OVERLAP_HOURS", "2.0"))
+SCREENING_INITIAL_LOOKBACK_DAYS = int(os.getenv("SCREENING_INITIAL_LOOKBACK_DAYS", "7"))
+SCREENING_MAX_PAGES = int(os.getenv("SCREENING_MAX_PAGES", "5"))
+SCREENING_PAGE_LIMIT = int(os.getenv("SCREENING_PAGE_LIMIT", "25"))
+CHECKPOINTS_FILE_PATH = os.getenv(
+    "CHECKPOINTS_FILE_PATH",
+    str(DATA_DIR / "screening_checkpoints.json")
+)
+SCREENING_AUTO_START = os.getenv("SCREENING_AUTO_START", "true").lower() in ("true", "1", "yes")
+
+# Incident Store Configuration
+INCIDENTS_STORE_PATH = os.getenv(
+    "INCIDENTS_STORE_PATH",
+    str(DATA_DIR / "incidents.json")
+)
+
+
+
+
 
 
