@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "updated_at": "2026-09-18T16:28:46.514137+00:00",
-  "count": 97,
+  "updated_at": "2026-09-20T06:51:24.413996+00:00",
+  "count": 103,
   "acquisitions": [
     {
       "id": "acq_a8eda0e868e5",
@@ -14852,6 +14852,1070 @@
         "candidate_centroid": {
           "lat": 24.97652,
           "lon": 55.14606
+        },
+        "model_version": "development-adapter-v1",
+        "source": "development_adapter",
+        "triage_mode": "DEVELOPMENT ADAPTER",
+        "rationale": "DEVELOPMENT ADAPTER: Standard uniform SAR sea clutter. No capillary damping anomaly detected above baseline variance."
+      },
+      "screening_decision": "ARCHIVE",
+      "screening_reason": "DEVELOPMENT SCREENING POLICY: Triage confirms baseline sea state (no dark patch anomaly). Archived."
+    },
+    {
+      "id": "acq_ab1a20dbc2a1",
+      "product_id": "S1D_IW_GRDH_1SDV_20260919T231110_20260919T231135_004653_008B05_51C7_COG.SAFE",
+      "zone_id": "MALACCA_STRAIT",
+      "acquisition_time_utc": "2026-09-19T23:11:10Z",
+      "discovered_time_utc": "2026-09-20T06:51:21.100109+00:00",
+      "availability_time_utc": null,
+      "bbox": [
+        97.21079786791074,
+        3.95204943640452,
+        99.74534182702054,
+        5.922159835456741
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "urn:ogc:def:crs:OGC::CRS84"
+          }
+        },
+        "coordinates": [
+          [
+            [
+              99.74534182702054,
+              5.464223694612641
+            ],
+            [
+              98.62562474547738,
+              5.696487793678378
+            ],
+            [
+              97.52651154826015,
+              5.922159835456741
+            ],
+            [
+              97.37965450124426,
+              5.198241882141476
+            ],
+            [
+              97.34252990651144,
+              5.017308972093522
+            ],
+            [
+              97.30473461264489,
+              4.836509376937426
+            ],
+            [
+              97.26168161518179,
+              4.65679623025228
+            ],
+            [
+              97.22306503879558,
+              4.476158913414172
+            ],
+            [
+              97.21079786791074,
+              4.416069488089057
+            ],
+            [
+              98.31600744672191,
+              4.186142933596181
+            ],
+            [
+              99.43287479609182,
+              3.95204943640452
+            ],
+            [
+              99.74534182702054,
+              5.464223694612641
+            ]
+          ]
+        ]
+      },
+      "platform": "sentinel-1d",
+      "instrument_mode": "IW",
+      "orbit_direction": "descending",
+      "polarization": [
+        "VV",
+        "VH"
+      ],
+      "resolution": "HIGH",
+      "status": "CLEAN",
+      "quality_result": {
+        "passed": true,
+        "checks": {
+          "metadata": {
+            "status": "PASS",
+            "detail": "Metadata verified for S1D_IW_GRDH_1SDV_20260919T231110_20260919T231135_004653_008B05_51C7_COG.SAFE (timestamp: 2026-09-19T23:11:10Z)."
+          },
+          "collection": {
+            "status": "PASS",
+            "detail": "Collection 'sentinel-1-grd' and mode 'IW' are supported."
+          },
+          "polarization": {
+            "status": "PASS",
+            "detail": "Polarization check passed. Contains required co-polarization: ['VV']."
+          },
+          "coverage": {
+            "status": "PASS",
+            "detail": "Spatial coverage verified: span 2.535° lon x 1.970° lat."
+          },
+          "aoi_overlap": {
+            "status": "PASS",
+            "detail": "Acquisition intersects target zone (overlap span: 0.245° lon x 1.970° lat)."
+          },
+          "nodata": {
+            "status": "UNAVAILABLE",
+            "detail": "Nodata / missing pixel statistics not provided in STAC metadata."
+          },
+          "wind": {
+            "status": "UNAVAILABLE",
+            "detail": "Live metocean wind observation not available for this acquisition."
+          }
+        },
+        "reasons": [],
+        "summary": "Acquisition passed all operational quality checks."
+      },
+      "quality_reasons": [],
+      "screening_score": null,
+      "classification": "UNSCREENED",
+      "incident_id": null,
+      "model_version": null,
+      "created_at": "2026-09-20T06:51:21.100109+00:00",
+      "updated_at": "2026-09-20T06:51:21.228026+00:00",
+      "triage_result": {
+        "status": "NO_OIL",
+        "oil_probability": null,
+        "lookalike_probability": null,
+        "no_oil_probability": null,
+        "candidate_geometry": null,
+        "candidate_area_km2": null,
+        "candidate_centroid": {
+          "lat": 4.9371,
+          "lon": 98.47807
+        },
+        "model_version": "development-adapter-v1",
+        "source": "development_adapter",
+        "triage_mode": "DEVELOPMENT ADAPTER",
+        "rationale": "DEVELOPMENT ADAPTER: Standard uniform SAR sea clutter. No capillary damping anomaly detected above baseline variance."
+      },
+      "screening_decision": "ARCHIVE",
+      "screening_reason": "DEVELOPMENT SCREENING POLICY: Triage confirms baseline sea state (no dark patch anomaly). Archived."
+    },
+    {
+      "id": "acq_4da02967c022",
+      "product_id": "S1D_IW_GRDH_1SDV_20260919T231045_20260919T231110_004653_008B05_F0BF_COG.SAFE",
+      "zone_id": "MALACCA_STRAIT",
+      "acquisition_time_utc": "2026-09-19T23:10:45Z",
+      "discovered_time_utc": "2026-09-20T06:51:21.292904+00:00",
+      "availability_time_utc": null,
+      "bbox": [
+        97.5279820310502,
+        5.464236522501938,
+        100.05540170509046,
+        7.430279661555407
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "urn:ogc:def:crs:OGC::CRS84"
+          }
+        },
+        "coordinates": [
+          [
+            [
+              100.05540170509046,
+              6.976997848038305
+            ],
+            [
+              99.49713797683,
+              7.091906048626147
+            ],
+            [
+              98.93343907574376,
+              7.207190879440428
+            ],
+            [
+              98.36947151331563,
+              7.321772762687715
+            ],
+            [
+              97.83186896896959,
+              7.430279661555407
+            ],
+            [
+              97.7228936282303,
+              6.887280081959634
+            ],
+            [
+              97.5279820310502,
+              5.922140457931684
+            ],
+            [
+              98.62568003105275,
+              5.696758085883666
+            ],
+            [
+              99.74663456139596,
+              5.464236522501938
+            ],
+            [
+              99.87132778880765,
+              6.069003912852986
+            ],
+            [
+              99.90760896175809,
+              6.250738058892095
+            ],
+            [
+              99.94611032431686,
+              6.432008119269795
+            ],
+            [
+              99.98348522975206,
+              6.613509821600045
+            ],
+            [
+              100.05540170509046,
+              6.976997848038305
+            ]
+          ]
+        ]
+      },
+      "platform": "sentinel-1d",
+      "instrument_mode": "IW",
+      "orbit_direction": "descending",
+      "polarization": [
+        "VV",
+        "VH"
+      ],
+      "resolution": "HIGH",
+      "status": "CLEAN",
+      "quality_result": {
+        "passed": true,
+        "checks": {
+          "metadata": {
+            "status": "PASS",
+            "detail": "Metadata verified for S1D_IW_GRDH_1SDV_20260919T231045_20260919T231110_004653_008B05_F0BF_COG.SAFE (timestamp: 2026-09-19T23:10:45Z)."
+          },
+          "collection": {
+            "status": "PASS",
+            "detail": "Collection 'sentinel-1-grd' and mode 'IW' are supported."
+          },
+          "polarization": {
+            "status": "PASS",
+            "detail": "Polarization check passed. Contains required co-polarization: ['VV']."
+          },
+          "coverage": {
+            "status": "PASS",
+            "detail": "Spatial coverage verified: span 2.527° lon x 1.966° lat."
+          },
+          "aoi_overlap": {
+            "status": "PASS",
+            "detail": "Acquisition intersects target zone (overlap span: 0.555° lon x 0.536° lat)."
+          },
+          "nodata": {
+            "status": "UNAVAILABLE",
+            "detail": "Nodata / missing pixel statistics not provided in STAC metadata."
+          },
+          "wind": {
+            "status": "UNAVAILABLE",
+            "detail": "Live metocean wind observation not available for this acquisition."
+          }
+        },
+        "reasons": [],
+        "summary": "Acquisition passed all operational quality checks."
+      },
+      "quality_reasons": [],
+      "screening_score": null,
+      "classification": "UNSCREENED",
+      "incident_id": null,
+      "model_version": null,
+      "created_at": "2026-09-20T06:51:21.292904+00:00",
+      "updated_at": "2026-09-20T06:51:21.321257+00:00",
+      "triage_result": {
+        "status": "NO_OIL",
+        "oil_probability": null,
+        "lookalike_probability": null,
+        "no_oil_probability": null,
+        "candidate_geometry": null,
+        "candidate_area_km2": null,
+        "candidate_centroid": {
+          "lat": 6.44726,
+          "lon": 98.79169
+        },
+        "model_version": "development-adapter-v1",
+        "source": "development_adapter",
+        "triage_mode": "DEVELOPMENT ADAPTER",
+        "rationale": "DEVELOPMENT ADAPTER: Standard uniform SAR sea clutter. No capillary damping anomaly detected above baseline variance."
+      },
+      "screening_decision": "ARCHIVE",
+      "screening_reason": "DEVELOPMENT SCREENING POLICY: Triage confirms baseline sea state (no dark patch anomaly). Archived."
+    },
+    {
+      "id": "acq_20a16bd79355",
+      "product_id": "S1D_IW_GRDH_1SDV_20260920T022330_20260920T022353_004655_008B0C_B619_COG.SAFE",
+      "zone_id": "STRAIT_OF_HORMUZ",
+      "acquisition_time_utc": "2026-09-20T02:23:30Z",
+      "discovered_time_utc": "2026-09-20T06:51:23.973412+00:00",
+      "availability_time_utc": null,
+      "bbox": [
+        51.577553777472616,
+        22.924324879775607,
+        54.25948304445241,
+        24.60523025786973
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "urn:ogc:def:crs:OGC::CRS84"
+          }
+        },
+        "coordinates": [
+          [
+            [
+              54.25948304445241,
+              24.191576120315958
+            ],
+            [
+              53.8882055423303,
+              24.257363031448424
+            ],
+            [
+              53.639572554688925,
+              24.30087481113516
+            ],
+            [
+              53.2663069634938,
+              24.365379468126633
+            ],
+            [
+              53.01725420182246,
+              24.407872418029868
+            ],
+            [
+              52.64336442534803,
+              24.470843866334253
+            ],
+            [
+              52.39389921641148,
+              24.512311281752027
+            ],
+            [
+              51.82495404659337,
+              24.60523025786973
+            ],
+            [
+              51.718545191840036,
+              24.063040903451927
+            ],
+            [
+              51.577553777472616,
+              23.3403533633779
+            ],
+            [
+              52.140565306934405,
+              23.246683392640442
+            ],
+            [
+              52.3875655582235,
+              23.204905560947402
+            ],
+            [
+              52.757954169381975,
+              23.14148287144974
+            ],
+            [
+              53.12764362252698,
+              23.077252509769735
+            ],
+            [
+              53.374026790384896,
+              23.033931370897427
+            ],
+            [
+              53.61982109404872,
+              22.990303868384338
+            ],
+            [
+              53.98724122020519,
+              22.924324879775607
+            ],
+            [
+              54.181376034747565,
+              23.82946746950268
+            ],
+            [
+              54.25948304445241,
+              24.191576120315958
+            ]
+          ]
+        ]
+      },
+      "platform": "sentinel-1d",
+      "instrument_mode": "IW",
+      "orbit_direction": "descending",
+      "polarization": [
+        "VV",
+        "VH"
+      ],
+      "resolution": "HIGH",
+      "status": "CLEAN",
+      "quality_result": {
+        "passed": true,
+        "checks": {
+          "metadata": {
+            "status": "PASS",
+            "detail": "Metadata verified for S1D_IW_GRDH_1SDV_20260920T022330_20260920T022353_004655_008B0C_B619_COG.SAFE (timestamp: 2026-09-20T02:23:30Z)."
+          },
+          "collection": {
+            "status": "PASS",
+            "detail": "Collection 'sentinel-1-grd' and mode 'IW' are supported."
+          },
+          "polarization": {
+            "status": "PASS",
+            "detail": "Polarization check passed. Contains required co-polarization: ['VV']."
+          },
+          "coverage": {
+            "status": "PASS",
+            "detail": "Spatial coverage verified: span 2.682° lon x 1.681° lat."
+          },
+          "aoi_overlap": {
+            "status": "PASS",
+            "detail": "Acquisition intersects target zone (overlap span: 0.259° lon x 1.105° lat)."
+          },
+          "nodata": {
+            "status": "UNAVAILABLE",
+            "detail": "Nodata / missing pixel statistics not provided in STAC metadata."
+          },
+          "wind": {
+            "status": "UNAVAILABLE",
+            "detail": "Live metocean wind observation not available for this acquisition."
+          }
+        },
+        "reasons": [],
+        "summary": "Acquisition passed all operational quality checks."
+      },
+      "quality_reasons": [],
+      "screening_score": null,
+      "classification": "UNSCREENED",
+      "incident_id": null,
+      "model_version": null,
+      "created_at": "2026-09-20T06:51:23.973412+00:00",
+      "updated_at": "2026-09-20T06:51:24.055895+00:00",
+      "triage_result": {
+        "status": "NO_OIL",
+        "oil_probability": null,
+        "lookalike_probability": null,
+        "no_oil_probability": null,
+        "candidate_geometry": null,
+        "candidate_area_km2": null,
+        "candidate_centroid": {
+          "lat": 23.76478,
+          "lon": 52.91852
+        },
+        "model_version": "development-adapter-v1",
+        "source": "development_adapter",
+        "triage_mode": "DEVELOPMENT ADAPTER",
+        "rationale": "DEVELOPMENT ADAPTER: Standard uniform SAR sea clutter. No capillary damping anomaly detected above baseline variance."
+      },
+      "screening_decision": "ARCHIVE",
+      "screening_reason": "DEVELOPMENT SCREENING POLICY: Triage confirms baseline sea state (no dark patch anomaly). Archived."
+    },
+    {
+      "id": "acq_e2c995631be5",
+      "product_id": "S1D_IW_GRDH_1SDV_20260920T022305_20260920T022330_004655_008B0C_ED75_COG.SAFE",
+      "zone_id": "STRAIT_OF_HORMUZ",
+      "acquisition_time_utc": "2026-09-20T02:23:05Z",
+      "discovered_time_utc": "2026-09-20T06:51:24.118082+00:00",
+      "availability_time_utc": null,
+      "bbox": [
+        51.822380882278495,
+        24.192000804373333,
+        54.58287198787581,
+        26.11164592785854
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "urn:ogc:def:crs:OGC::CRS84"
+          }
+        },
+        "coordinates": [
+          [
+            [
+              54.58287198787581,
+              25.70065913980285
+            ],
+            [
+              54.20786272496111,
+              25.766022702112874
+            ],
+            [
+              53.9561269506754,
+              25.809318420910873
+            ],
+            [
+              53.578182313152396,
+              25.873444799855417
+            ],
+            [
+              53.32599395223854,
+              25.915649370960196
+            ],
+            [
+              52.947377013483,
+              25.978133830341534
+            ],
+            [
+              52.69474487921906,
+              26.019240288777198
+            ],
+            [
+              52.44193775246136,
+              26.05990555464796
+            ],
+            [
+              52.11588036736552,
+              26.11164592785854
+            ],
+            [
+              51.822380882278495,
+              24.60592319642595
+            ],
+            [
+              52.393952883662344,
+              24.512580843727925
+            ],
+            [
+              52.64341862783877,
+              24.471113436745433
+            ],
+            [
+              53.01730923405696,
+              24.40814214271016
+            ],
+            [
+              53.266362537691776,
+              24.36564924496983
+            ],
+            [
+              53.63962892454894,
+              24.301144590250964
+            ],
+            [
+              53.888262461454325,
+              24.25763290655143
+            ],
+            [
+              54.25867133597805,
+              24.192000804373333
+            ],
+            [
+              54.42681463453569,
+              24.976312406185333
+            ],
+            [
+              54.58287198787581,
+              25.70065913980285
+            ]
+          ]
+        ]
+      },
+      "platform": "sentinel-1d",
+      "instrument_mode": "IW",
+      "orbit_direction": "descending",
+      "polarization": [
+        "VV",
+        "VH"
+      ],
+      "resolution": "HIGH",
+      "status": "CLEAN",
+      "quality_result": {
+        "passed": true,
+        "checks": {
+          "metadata": {
+            "status": "PASS",
+            "detail": "Metadata verified for S1D_IW_GRDH_1SDV_20260920T022305_20260920T022330_004655_008B0C_ED75_COG.SAFE (timestamp: 2026-09-20T02:23:05Z)."
+          },
+          "collection": {
+            "status": "PASS",
+            "detail": "Collection 'sentinel-1-grd' and mode 'IW' are supported."
+          },
+          "polarization": {
+            "status": "PASS",
+            "detail": "Polarization check passed. Contains required co-polarization: ['VV']."
+          },
+          "coverage": {
+            "status": "PASS",
+            "detail": "Spatial coverage verified: span 2.760° lon x 1.920° lat."
+          },
+          "aoi_overlap": {
+            "status": "PASS",
+            "detail": "Acquisition intersects target zone (overlap span: 0.583° lon x 1.920° lat)."
+          },
+          "nodata": {
+            "status": "UNAVAILABLE",
+            "detail": "Nodata / missing pixel statistics not provided in STAC metadata."
+          },
+          "wind": {
+            "status": "UNAVAILABLE",
+            "detail": "Live metocean wind observation not available for this acquisition."
+          }
+        },
+        "reasons": [],
+        "summary": "Acquisition passed all operational quality checks."
+      },
+      "quality_reasons": [],
+      "screening_score": null,
+      "classification": "UNSCREENED",
+      "incident_id": null,
+      "model_version": null,
+      "created_at": "2026-09-20T06:51:24.118082+00:00",
+      "updated_at": "2026-09-20T06:51:24.200612+00:00",
+      "triage_result": {
+        "status": "NO_OIL",
+        "oil_probability": null,
+        "lookalike_probability": null,
+        "no_oil_probability": null,
+        "candidate_geometry": null,
+        "candidate_area_km2": null,
+        "candidate_centroid": {
+          "lat": 25.15182,
+          "lon": 53.20263
+        },
+        "model_version": "development-adapter-v1",
+        "source": "development_adapter",
+        "triage_mode": "DEVELOPMENT ADAPTER",
+        "rationale": "DEVELOPMENT ADAPTER: Standard uniform SAR sea clutter. No capillary damping anomaly detected above baseline variance."
+      },
+      "screening_decision": "ARCHIVE",
+      "screening_reason": "DEVELOPMENT SCREENING POLICY: Triage confirms baseline sea state (no dark patch anomaly). Archived."
+    },
+    {
+      "id": "acq_294822ac1381",
+      "product_id": "S1D_IW_GRDH_1SDV_20260920T022240_20260920T022305_004655_008B0C_63A6_COG.SAFE",
+      "zone_id": "STRAIT_OF_HORMUZ",
+      "acquisition_time_utc": "2026-09-20T02:22:40Z",
+      "discovered_time_utc": "2026-09-20T06:51:24.270531+00:00",
+      "availability_time_utc": null,
+      "bbox": [
+        52.11967571479711,
+        25.70134256239916,
+        54.895395690997155,
+        27.618446892717564
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "urn:ogc:def:crs:OGC::CRS84"
+          }
+        },
+        "coordinates": [
+          [
+            [
+              54.895395690997155,
+              27.211540668005384
+            ],
+            [
+              54.511032006347044,
+              27.277356632911232
+            ],
+            [
+              54.25332097134815,
+              27.320851535258477
+            ],
+            [
+              54.00337605194904,
+              27.362556300135466
+            ],
+            [
+              53.620999132119564,
+              27.42542861081489
+            ],
+            [
+              53.24009991942788,
+              27.486949193114377
+            ],
+            [
+              52.98102833958589,
+              27.528155305542622
+            ],
+            [
+              52.7286124558359,
+              27.567816743383386
+            ],
+            [
+              52.40166324685383,
+              27.618446892717564
+            ],
+            [
+              52.3717207046444,
+              27.437008752737174
+            ],
+            [
+              52.33791949083698,
+              27.256060389414394
+            ],
+            [
+              52.272397330067506,
+              26.893823783667287
+            ],
+            [
+              52.11967571479711,
+              26.111327418149976
+            ],
+            [
+              52.44199144070818,
+              26.06017708825862
+            ],
+            [
+              52.6947991671271,
+              26.019511891158963
+            ],
+            [
+              52.94743191065933,
+              25.978405552932212
+            ],
+            [
+              53.326049743023674,
+              25.91592117845874
+            ],
+            [
+              53.5782386994987,
+              25.873716666611244
+            ],
+            [
+              53.95618421041569,
+              25.80959028589308
+            ],
+            [
+              54.20792058835765,
+              25.76629466964925
+            ],
+            [
+              54.58058288866327,
+              25.70134256239916
+            ],
+            [
+              54.75033468984949,
+              26.485288306736617
+            ],
+            [
+              54.787119224374614,
+              26.666787079983415
+            ],
+            [
+              54.81775234341226,
+              26.84934794553574
+            ],
+            [
+              54.85094711437411,
+              27.03146128147099
+            ],
+            [
+              54.895395690997155,
+              27.211540668005384
+            ]
+          ]
+        ]
+      },
+      "platform": "sentinel-1d",
+      "instrument_mode": "IW",
+      "orbit_direction": "descending",
+      "polarization": [
+        "VV",
+        "VH"
+      ],
+      "resolution": "HIGH",
+      "status": "CLEAN",
+      "quality_result": {
+        "passed": true,
+        "checks": {
+          "metadata": {
+            "status": "PASS",
+            "detail": "Metadata verified for S1D_IW_GRDH_1SDV_20260920T022240_20260920T022305_004655_008B0C_63A6_COG.SAFE (timestamp: 2026-09-20T02:22:40Z)."
+          },
+          "collection": {
+            "status": "PASS",
+            "detail": "Collection 'sentinel-1-grd' and mode 'IW' are supported."
+          },
+          "polarization": {
+            "status": "PASS",
+            "detail": "Polarization check passed. Contains required co-polarization: ['VV']."
+          },
+          "coverage": {
+            "status": "PASS",
+            "detail": "Spatial coverage verified: span 2.776° lon x 1.917° lat."
+          },
+          "aoi_overlap": {
+            "status": "PASS",
+            "detail": "Acquisition intersects target zone (overlap span: 0.895° lon x 1.799° lat)."
+          },
+          "nodata": {
+            "status": "UNAVAILABLE",
+            "detail": "Nodata / missing pixel statistics not provided in STAC metadata."
+          },
+          "wind": {
+            "status": "UNAVAILABLE",
+            "detail": "Live metocean wind observation not available for this acquisition."
+          }
+        },
+        "reasons": [],
+        "summary": "Acquisition passed all operational quality checks."
+      },
+      "quality_reasons": [],
+      "screening_score": null,
+      "classification": "UNSCREENED",
+      "incident_id": null,
+      "model_version": null,
+      "created_at": "2026-09-20T06:51:24.270531+00:00",
+      "updated_at": "2026-09-20T06:51:24.315060+00:00",
+      "triage_result": {
+        "status": "NO_OIL",
+        "oil_probability": null,
+        "lookalike_probability": null,
+        "no_oil_probability": null,
+        "candidate_geometry": null,
+        "candidate_area_km2": null,
+        "candidate_centroid": {
+          "lat": 26.65989,
+          "lon": 53.50754
+        },
+        "model_version": "development-adapter-v1",
+        "source": "development_adapter",
+        "triage_mode": "DEVELOPMENT ADAPTER",
+        "rationale": "DEVELOPMENT ADAPTER: Standard uniform SAR sea clutter. No capillary damping anomaly detected above baseline variance."
+      },
+      "screening_decision": "ARCHIVE",
+      "screening_reason": "DEVELOPMENT SCREENING POLICY: Triage confirms baseline sea state (no dark patch anomaly). Archived."
+    },
+    {
+      "id": "acq_bee49510dca9",
+      "product_id": "S1D_IW_GRDH_1SDV_20260920T022215_20260920T022240_004655_008B0C_DD5B_COG.SAFE",
+      "zone_id": "STRAIT_OF_HORMUZ",
+      "acquisition_time_utc": "2026-09-20T02:22:15Z",
+      "discovered_time_utc": "2026-09-20T06:51:24.357718+00:00",
+      "availability_time_utc": null,
+      "bbox": [
+        52.40298232234494,
+        27.212683120389823,
+        55.200709620331146,
+        29.126103955189812
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "crs": {
+          "type": "name",
+          "properties": {
+            "name": "urn:ogc:def:crs:OGC::CRS84"
+          }
+        },
+        "coordinates": [
+          [
+            [
+              55.200709620331146,
+              28.723694057476767
+            ],
+            [
+              54.823580407798254,
+              28.7871037055621
+            ],
+            [
+              54.56639010679232,
+              28.82969829820023
+            ],
+            [
+              54.17667883997544,
+              28.893239757664197
+            ],
+            [
+              53.91830426561396,
+              28.934706283771156
+            ],
+            [
+              53.53007170886192,
+              28.996021523164277
+            ],
+            [
+              53.26719963810674,
+              29.036858360722583
+            ],
+            [
+              53.00999082075704,
+              29.07629365848219
+            ],
+            [
+              52.67998779733273,
+              29.126103955189812
+            ],
+            [
+              52.64429557724196,
+              28.945584985926285
+            ],
+            [
+              52.61300969325802,
+              28.764310079268867
+            ],
+            [
+              52.58254059792405,
+              28.582904198782465
+            ],
+            [
+              52.550820830904314,
+              28.40167969923396
+            ],
+            [
+              52.5219249599194,
+              28.22001999146248
+            ],
+            [
+              52.486064574638675,
+              28.039407688872192
+            ],
+            [
+              52.44843305485582,
+              27.859059626452584
+            ],
+            [
+              52.414710095386404,
+              27.678115877120597
+            ],
+            [
+              52.40298232234494,
+              27.618523088538694
+            ],
+            [
+              52.72696485455297,
+              27.568353147024247
+            ],
+            [
+              52.979588804982896,
+              27.52866226620541
+            ],
+            [
+              53.23885488960693,
+              27.487428136501965
+            ],
+            [
+              53.62005741274464,
+              27.4258621467905
+            ],
+            [
+              54.00274013397133,
+              27.36294219273958
+            ],
+            [
+              54.252873294721496,
+              27.321207348910352
+            ],
+            [
+              54.51079565549907,
+              27.277677726169916
+            ],
+            [
+              54.89039651998597,
+              27.212683120389823
+            ],
+            [
+              54.94609800040256,
+              27.452874162096183
+            ],
+            [
+              55.05647703007855,
+              27.997345011299853
+            ],
+            [
+              55.09171534125258,
+              28.179098084741337
+            ],
+            [
+              55.123956348834724,
+              28.361357055029817
+            ],
+            [
+              55.161014937355155,
+              28.542795418213807
+            ],
+            [
+              55.200709620331146,
+              28.723694057476767
+            ]
+          ]
+        ]
+      },
+      "platform": "sentinel-1d",
+      "instrument_mode": "IW",
+      "orbit_direction": "descending",
+      "polarization": [
+        "VV",
+        "VH"
+      ],
+      "resolution": "HIGH",
+      "status": "CLEAN",
+      "quality_result": {
+        "passed": true,
+        "checks": {
+          "metadata": {
+            "status": "PASS",
+            "detail": "Metadata verified for S1D_IW_GRDH_1SDV_20260920T022215_20260920T022240_004655_008B0C_DD5B_COG.SAFE (timestamp: 2026-09-20T02:22:15Z)."
+          },
+          "collection": {
+            "status": "PASS",
+            "detail": "Collection 'sentinel-1-grd' and mode 'IW' are supported."
+          },
+          "polarization": {
+            "status": "PASS",
+            "detail": "Polarization check passed. Contains required co-polarization: ['VV']."
+          },
+          "coverage": {
+            "status": "PASS",
+            "detail": "Spatial coverage verified: span 2.798° lon x 1.913° lat."
+          },
+          "aoi_overlap": {
+            "status": "PASS",
+            "detail": "Acquisition intersects target zone (overlap span: 1.201° lon x 0.287° lat)."
+          },
+          "nodata": {
+            "status": "UNAVAILABLE",
+            "detail": "Nodata / missing pixel statistics not provided in STAC metadata."
+          },
+          "wind": {
+            "status": "UNAVAILABLE",
+            "detail": "Live metocean wind observation not available for this acquisition."
+          }
+        },
+        "reasons": [],
+        "summary": "Acquisition passed all operational quality checks."
+      },
+      "quality_reasons": [],
+      "screening_score": null,
+      "classification": "UNSCREENED",
+      "incident_id": null,
+      "model_version": null,
+      "created_at": "2026-09-20T06:51:24.357718+00:00",
+      "updated_at": "2026-09-20T06:51:24.413996+00:00",
+      "triage_result": {
+        "status": "NO_OIL",
+        "oil_probability": null,
+        "lookalike_probability": null,
+        "no_oil_probability": null,
+        "candidate_geometry": null,
+        "candidate_area_km2": null,
+        "candidate_centroid": {
+          "lat": 28.16939,
+          "lon": 53.80185
         },
         "model_version": "development-adapter-v1",
         "source": "development_adapter",
