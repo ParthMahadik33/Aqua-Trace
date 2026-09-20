@@ -302,7 +302,7 @@ function SimulationPageContent() {
   const [activeOverlayMode, setActiveOverlayMode] = useState<
     'none' | 'vv' | 'composite' | 'mask' | 'overlay'
   >('none');
-  const [overlayOpacity, setOverlayOpacity] = useState<number>(0.85);
+  const [overlayOpacity, setOverlayOpacity] = useState<number>(0.65);
   const [isReportModalOpen, setIsReportModalOpen] = useState<boolean>(false);
   const [isEvidenceGraphOpen, setIsEvidenceGraphOpen] = useState<boolean>(false);
 

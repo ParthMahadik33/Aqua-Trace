@@ -145,7 +145,7 @@ export const CounterfactualMapLayer: React.FC<CounterfactualMapLayerProps> = ({
   return (
     <>
       {/* ------------------------------------------------------------- */}
-      {/* A. OBSERVED SLICK BOUNDARY (Satellite-derived Polygon) */}
+      {/* A. OBSERVED SLICK BOUNDARY (Satellite-derived Polygon: slickPane 470) */}
       {/* ------------------------------------------------------------- */}
       <Rectangle
         bounds={slickBounds}
@@ -155,9 +155,10 @@ export const CounterfactualMapLayer: React.FC<CounterfactualMapLayerProps> = ({
           dashArray: '5, 5',
           fillOpacity: 0.18,
           fillColor: '#E11D48',
+          pane: 'slickPane',
         }}
       >
-        <Tooltip direction="bottom" opacity={0.95} className="tactical-tooltip">
+        <Tooltip direction="bottom" opacity={0.95} className="tactical-tooltip" pane="labelPane">
           <div className="px-2 py-1 rounded bg-[#180A0E]/95 border border-rose-500/60 text-rose-300 font-mono text-[10px] shadow-lg">
             <span className="font-bold">OBSERVED SLICK</span> &middot; SATELLITE EVIDENCE
             <div className="text-zinc-400 text-[9px] mt-0.5">
@@ -175,11 +176,12 @@ export const CounterfactualMapLayer: React.FC<CounterfactualMapLayerProps> = ({
           weight: 2,
           opacity: 0.9,
           dashArray: '2, 4',
+          pane: 'slickPane',
         }}
       />
 
       {/* ------------------------------------------------------------- */}
-      {/* B. CANDIDATE VESSEL TRACK */}
+      {/* B. CANDIDATE VESSEL TRACK (vesselPane 450) */}
       {/* ------------------------------------------------------------- */}
       {trackPositions.length > 1 && (
         <Polyline
@@ -189,9 +191,10 @@ export const CounterfactualMapLayer: React.FC<CounterfactualMapLayerProps> = ({
             weight: 3,
             dashArray: '6, 6',
             opacity: 0.85,
+            pane: 'vesselPane',
           }}
         >
-          <Tooltip direction="right" opacity={0.9} className="tactical-tooltip">
+          <Tooltip direction="right" opacity={0.9} className="tactical-tooltip" pane="labelPane">
             <div className="px-2 py-1 rounded bg-[#161005]/95 border border-amber-500/60 text-amber-300 font-mono text-[10px]">
               <span className="font-bold">VESSEL TRACK</span> &middot; {candName}
               <div className="text-zinc-400 text-[9px]">
@@ -203,7 +206,7 @@ export const CounterfactualMapLayer: React.FC<CounterfactualMapLayerProps> = ({
       )}
 
       {/* ------------------------------------------------------------- */}
-      {/* C. HYPOTHETICAL RELEASE POINT & SEGMENT */}
+      {/* C. HYPOTHETICAL RELEASE POINT & SEGMENT (vesselPane 450) */}
       {/* ------------------------------------------------------------- */}
       {releaseSegmentPositions.length >= 2 && (
         <Polyline
@@ -213,9 +216,10 @@ export const CounterfactualMapLayer: React.FC<CounterfactualMapLayerProps> = ({
             weight: 5,
             opacity: 0.95,
             lineCap: 'round',
+            pane: 'vesselPane',
           }}
         >
-          <Tooltip permanent direction="top" opacity={0.95} className="tactical-tooltip">
+          <Tooltip permanent direction="top" opacity={0.95} className="tactical-tooltip" pane="labelPane">
             <div className="px-2 py-0.5 rounded bg-[#180A14]/95 border border-pink-500/60 text-pink-300 font-mono text-[9px] font-bold">
               HYPOTHETICAL RELEASE
             </div>
@@ -232,6 +236,7 @@ export const CounterfactualMapLayer: React.FC<CounterfactualMapLayerProps> = ({
           fillColor: '#F472B6',
           fillOpacity: 0.9,
           weight: 2,
+          pane: 'vesselPane',
         }}
       >
         <Popup className="tactical-popup">
@@ -248,7 +253,7 @@ export const CounterfactualMapLayer: React.FC<CounterfactualMapLayerProps> = ({
       </CircleMarker>
 
       {/* ------------------------------------------------------------- */}
-      {/* D. SIMULATED PLUME PARTICLES (Gaussian-Lagrangian Advection) */}
+      {/* D. SIMULATED PLUME PARTICLES (plumePane 460) */}
       {/* ------------------------------------------------------------- */}
       {particles.map((p) => (
         <CircleMarker
@@ -260,6 +265,7 @@ export const CounterfactualMapLayer: React.FC<CounterfactualMapLayerProps> = ({
             fillColor: '#38BDF8',
             fillOpacity: 0.75,
             weight: 0.5,
+            pane: 'plumePane',
           }}
         />
       ))}
@@ -272,11 +278,12 @@ export const CounterfactualMapLayer: React.FC<CounterfactualMapLayerProps> = ({
           weight: 2,
           opacity: 0.9,
           dashArray: '2, 4',
+          pane: 'plumePane',
         }}
       />
 
       {/* ------------------------------------------------------------- */}
-      {/* E. OBSERVED CENTROID WITH LEADER LINE */}
+      {/* E. OBSERVED CENTROID WITH LEADER LINE (annotationPane 480) */}
       {/* ------------------------------------------------------------- */}
       <Polyline
         positions={[
@@ -287,6 +294,7 @@ export const CounterfactualMapLayer: React.FC<CounterfactualMapLayerProps> = ({
           color: '#E11D48',
           weight: 1.5,
           opacity: 0.8,
+          pane: 'annotationPane',
         }}
       />
       <CircleMarker
@@ -297,15 +305,16 @@ export const CounterfactualMapLayer: React.FC<CounterfactualMapLayerProps> = ({
           fillColor: '#E11D48',
           fillOpacity: 0.95,
           weight: 2,
+          pane: 'annotationPane',
         }}
       />
       {/* Leader Label Marker */}
       <CircleMarker
         center={obsLeaderTarget}
         radius={1}
-        pathOptions={{ opacity: 0, fillOpacity: 0 }}
+        pathOptions={{ opacity: 0, fillOpacity: 0, pane: 'annotationPane' }}
       >
-        <Tooltip direction="top" permanent opacity={0.95} className="tactical-tooltip">
+        <Tooltip direction="top" permanent opacity={0.95} className="tactical-tooltip" pane="labelPane">
           <div className="px-1.5 py-0.5 rounded bg-[#180A0E]/95 border border-rose-500 text-rose-200 font-mono text-[9px] font-bold shadow-md">
             OBSERVED CENTROID
           </div>
@@ -313,7 +322,7 @@ export const CounterfactualMapLayer: React.FC<CounterfactualMapLayerProps> = ({
       </CircleMarker>
 
       {/* ------------------------------------------------------------- */}
-      {/* F. PREDICTED CENTROID WITH LEADER LINE */}
+      {/* F. PREDICTED CENTROID WITH LEADER LINE (annotationPane 480) */}
       {/* ------------------------------------------------------------- */}
       <Polyline
         positions={[
@@ -324,6 +333,7 @@ export const CounterfactualMapLayer: React.FC<CounterfactualMapLayerProps> = ({
           color: '#059669',
           weight: 1.5,
           opacity: 0.8,
+          pane: 'annotationPane',
         }}
       />
       <CircleMarker
@@ -334,15 +344,16 @@ export const CounterfactualMapLayer: React.FC<CounterfactualMapLayerProps> = ({
           fillColor: '#10B981',
           fillOpacity: 0.95,
           weight: 2,
+          pane: 'annotationPane',
         }}
       />
       {/* Leader Label Marker */}
       <CircleMarker
         center={simLeaderTarget}
         radius={1}
-        pathOptions={{ opacity: 0, fillOpacity: 0 }}
+        pathOptions={{ opacity: 0, fillOpacity: 0, pane: 'annotationPane' }}
       >
-        <Tooltip direction="top" permanent opacity={0.95} className="tactical-tooltip">
+        <Tooltip direction="top" permanent opacity={0.95} className="tactical-tooltip" pane="labelPane">
           <div className="px-1.5 py-0.5 rounded bg-[#061810]/95 border border-emerald-500 text-emerald-200 font-mono text-[9px] font-bold shadow-md">
             PREDICTED CENTROID
           </div>
@@ -350,7 +361,7 @@ export const CounterfactualMapLayer: React.FC<CounterfactualMapLayerProps> = ({
       </CircleMarker>
 
       {/* ------------------------------------------------------------- */}
-      {/* G. CENTROID OFFSET MEASUREMENT LINE & LABEL */}
+      {/* G. CENTROID OFFSET MEASUREMENT LINE & LABEL (annotationPane 480) */}
       {/* ------------------------------------------------------------- */}
       <Polyline
         positions={[
@@ -362,9 +373,10 @@ export const CounterfactualMapLayer: React.FC<CounterfactualMapLayerProps> = ({
           weight: 2.5,
           dashArray: '5, 5',
           opacity: 0.95,
+          pane: 'annotationPane',
         }}
       >
-        <Tooltip permanent direction="center" opacity={0.95} className="tactical-tooltip">
+        <Tooltip permanent direction="center" opacity={0.95} className="tactical-tooltip" pane="labelPane">
           <div className="px-2 py-1 rounded bg-[#181106]/95 border border-amber-400 text-amber-300 font-mono text-[10px] font-bold shadow-lg flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
             <span>{centroidDistNm} NM OFFSET</span>
@@ -373,14 +385,14 @@ export const CounterfactualMapLayer: React.FC<CounterfactualMapLayerProps> = ({
       </Polyline>
 
       {/* ------------------------------------------------------------- */}
-      {/* H. MAJOR-AXIS ORIENTATION DELTA ANNOTATION */}
+      {/* H. MAJOR-AXIS ORIENTATION DELTA ANNOTATION (annotationPane 480) */}
       {/* ------------------------------------------------------------- */}
       <CircleMarker
         center={[midLat, midLon]}
         radius={1}
-        pathOptions={{ opacity: 0, fillOpacity: 0 }}
+        pathOptions={{ opacity: 0, fillOpacity: 0, pane: 'annotationPane' }}
       >
-        <Tooltip permanent direction="bottom" opacity={0.95} className="tactical-tooltip">
+        <Tooltip permanent direction="bottom" opacity={0.95} className="tactical-tooltip" pane="labelPane">
           <div className="px-2 py-0.5 rounded bg-surface/95 border border-border text-foreground font-mono text-[9px] shadow-sm flex items-center gap-1">
             <span className="text-muted-foreground">ORIENTATION DELTA:</span>
             <span className="font-bold text-amber-600 dark:text-amber-400">{orientationDeltaDeg}°</span>
@@ -389,6 +401,7 @@ export const CounterfactualMapLayer: React.FC<CounterfactualMapLayerProps> = ({
       </CircleMarker>
     </>
   );
+
 };
 
 export default CounterfactualMapLayer;

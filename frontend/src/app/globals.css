@@ -152,3 +152,55 @@ html.light .leaflet-control-zoom a:hover {
   background: transparent;
   border: none;
 }
+
+/* ==========================================================================
+   Leaflet Custom Pane Z-Index Hierarchy (Strict Analytical Evidence Stacking)
+   sarRasterPane (410) -> environmentPane (420) -> corridorPane (430) ->
+   trajectoryPane (440) -> vesselPane (450) -> plumePane (460) ->
+   slickPane (470) -> annotationPane (480) -> labelPane (490) -> controlPane (1000)
+   ========================================================================== */
+.leaflet-pane.leaflet-sarRasterPane-pane {
+  z-index: 410 !important;
+  pointer-events: none !important;
+}
+
+.leaflet-pane.leaflet-sarRasterPane-pane img {
+  pointer-events: none !important;
+}
+
+.leaflet-pane.leaflet-environmentPane-pane {
+  z-index: 420 !important;
+}
+
+.leaflet-pane.leaflet-corridorPane-pane {
+  z-index: 430 !important;
+}
+
+.leaflet-pane.leaflet-trajectoryPane-pane {
+  z-index: 440 !important;
+}
+
+.leaflet-pane.leaflet-vesselPane-pane {
+  z-index: 450 !important;
+}
+
+.leaflet-pane.leaflet-plumePane-pane {
+  z-index: 460 !important;
+}
+
+.leaflet-pane.leaflet-slickPane-pane {
+  z-index: 470 !important;
+}
+
+.leaflet-pane.leaflet-annotationPane-pane {
+  z-index: 480 !important;
+}
+
+.leaflet-pane.leaflet-labelPane-pane {
+  z-index: 490 !important;
+  pointer-events: none !important;
+}
+
+.leaflet-pane.leaflet-controlPane-pane {
+  z-index: 1000 !important;
+}

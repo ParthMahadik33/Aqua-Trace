@@ -38,7 +38,7 @@ export const ImpactForecastMapLayer: React.FC<ImpactForecastMapLayerProps> = ({
 
   return (
     <>
-      {/* 1. OBSERVED SLICK ORIGIN (Fixed anchor) */}
+      {/* 1. OBSERVED SLICK ORIGIN (Fixed anchor: slickPane 470) */}
       <CircleMarker
         center={[55.2443, 5.8856]}
         radius={7}
@@ -47,16 +47,17 @@ export const ImpactForecastMapLayer: React.FC<ImpactForecastMapLayerProps> = ({
           fillColor: '#C084FC',
           fillOpacity: 0.9,
           weight: 2,
+          pane: 'slickPane',
         }}
       >
-        <Tooltip permanent direction="top" className="tactical-tooltip">
+        <Tooltip permanent direction="top" className="tactical-tooltip" pane="labelPane">
           <div className="px-2 py-0.5 rounded bg-[#090714]/95 border border-purple-500/50 text-purple-300 font-mono text-[9px]">
             T0 OBSERVED SLICK // 4.41 KM²
           </div>
         </Tooltip>
       </CircleMarker>
 
-      {/* Trajectory Guide Line (Drift axis from T0 to +48h) */}
+      {/* Trajectory Guide Line (Drift axis from T0 to +48h: trajectoryPane 440) */}
       <Polyline
         positions={[
           [55.244, 5.885],
@@ -67,10 +68,11 @@ export const ImpactForecastMapLayer: React.FC<ImpactForecastMapLayerProps> = ({
           weight: 1.5,
           dashArray: '4, 6',
           opacity: 0.45,
+          pane: 'trajectoryPane',
         }}
       />
 
-      {/* 2. DYNAMIC FORECAST PLUME (Deterministic Lagrangian expanding geometry) */}
+      {/* 2. DYNAMIC FORECAST PLUME (Deterministic Lagrangian expanding geometry: plumePane 460) */}
       <Polygon
         positions={plume.vertices}
         pathOptions={{
@@ -78,9 +80,10 @@ export const ImpactForecastMapLayer: React.FC<ImpactForecastMapLayerProps> = ({
           weight: plume.isShorelineCritical ? 2.5 : 2,
           fillColor: plume.isShorelineCritical ? '#DC2626' : '#EA580C',
           fillOpacity: plume.isShorelineCritical ? 0.35 : 0.22,
+          pane: 'plumePane',
         }}
       >
-        <Tooltip permanent direction="right" className="tactical-tooltip">
+        <Tooltip permanent direction="right" className="tactical-tooltip" pane="labelPane">
           <div
             className={`px-2 py-1 rounded font-mono text-[10px] shadow-xl border ${
               plume.isShorelineCritical
@@ -98,7 +101,7 @@ export const ImpactForecastMapLayer: React.FC<ImpactForecastMapLayerProps> = ({
         </Tooltip>
       </Polygon>
 
-      {/* Plume Leading Edge Particle Cluster */}
+      {/* Plume Leading Edge Particle Cluster (annotationPane 480) */}
       <CircleMarker
         center={[plume.centerLat, plume.centerLon]}
         radius={plume.isShorelineCritical ? 9 : 6}
@@ -107,10 +110,11 @@ export const ImpactForecastMapLayer: React.FC<ImpactForecastMapLayerProps> = ({
           fillColor: plume.isShorelineCritical ? '#F87171' : '#FCD34D',
           fillOpacity: 0.95,
           weight: 2,
+          pane: 'annotationPane',
         }}
       />
 
-      {/* 3. COASTAL EXPOSURE LAYER: Wadden Sea Barrier Islands Band */}
+      {/* 3. COASTAL EXPOSURE LAYER: Wadden Sea Barrier Islands Band (environmentPane 420) */}
       {layers.coastalExposure && (
         <Polygon
           positions={WADDEN_SEA_COASTLINE}
@@ -120,9 +124,10 @@ export const ImpactForecastMapLayer: React.FC<ImpactForecastMapLayerProps> = ({
             dashArray: plume.isShorelineCritical ? undefined : '4, 4',
             fillColor: '#EAB308',
             fillOpacity: plume.isShorelineCritical ? 0.28 : 0.12,
+            pane: 'environmentPane',
           }}
         >
-          <Tooltip direction="bottom" className="tactical-tooltip">
+          <Tooltip direction="bottom" className="tactical-tooltip" pane="labelPane">
             <div className="px-2 py-1 rounded bg-[#181105]/95 border border-yellow-500/60 text-yellow-300 font-mono text-[10px]">
               WADDEN SEA TIDAL FLATS // SENSITIVITY: HIGH (ESI 9-10)
             </div>
@@ -130,7 +135,7 @@ export const ImpactForecastMapLayer: React.FC<ImpactForecastMapLayerProps> = ({
         </Polygon>
       )}
 
-      {/* 4. ECOLOGICAL SENSITIVITY LAYER: Natura 2000 Marine Sanctuary */}
+      {/* 4. ECOLOGICAL SENSITIVITY LAYER: Natura 2000 Marine Sanctuary (environmentPane 420) */}
       {layers.ecological && (
         <Polygon
           positions={ECOLOGICAL_RESERVE_NATURA2000}
@@ -140,9 +145,10 @@ export const ImpactForecastMapLayer: React.FC<ImpactForecastMapLayerProps> = ({
             fillColor: '#059669',
             fillOpacity: 0.15,
             dashArray: '3, 4',
+            pane: 'environmentPane',
           }}
         >
-          <Tooltip direction="top" className="tactical-tooltip">
+          <Tooltip direction="top" className="tactical-tooltip" pane="labelPane">
             <div className="px-2 py-1 rounded bg-[#061810]/95 border border-emerald-500/50 text-emerald-300 font-mono text-[10px]">
               NATURA 2000: BIRD & SEAL NURSERY BIOSPHERE
             </div>
@@ -150,7 +156,7 @@ export const ImpactForecastMapLayer: React.FC<ImpactForecastMapLayerProps> = ({
         </Polygon>
       )}
 
-      {/* 5. FISHERIES LAYER: Zone 4B Active Demersal Grounds */}
+      {/* 5. FISHERIES LAYER: Zone 4B Active Demersal Grounds (environmentPane 420) */}
       {layers.fisheries && (
         <Polygon
           positions={FISHERIES_ZONE_4B}
@@ -160,9 +166,10 @@ export const ImpactForecastMapLayer: React.FC<ImpactForecastMapLayerProps> = ({
             fillColor: '#0284C7',
             fillOpacity: 0.12,
             dashArray: '4, 4',
+            pane: 'environmentPane',
           }}
         >
-          <Tooltip direction="left" className="tactical-tooltip">
+          <Tooltip direction="left" className="tactical-tooltip" pane="labelPane">
             <div className="px-2 py-1 rounded bg-[#061320]/95 border border-sky-500/50 text-sky-300 font-mono text-[10px]">
               COMMERCIAL FISHERIES: DEMERSAL ZONE 4B
             </div>
@@ -170,7 +177,7 @@ export const ImpactForecastMapLayer: React.FC<ImpactForecastMapLayerProps> = ({
         </Polygon>
       )}
 
-      {/* 6. POPULATION & HARBOR CENTERS */}
+      {/* 6. POPULATION & HARBOR CENTERS (environmentPane 420) */}
       {layers.population && (
         <>
           {COASTAL_HARBORS.map((h, i) => (
@@ -183,9 +190,10 @@ export const ImpactForecastMapLayer: React.FC<ImpactForecastMapLayerProps> = ({
                 fillColor: '#F8FAFC',
                 fillOpacity: 0.8,
                 weight: 1.5,
+                pane: 'environmentPane',
               }}
             >
-              <Tooltip direction="bottom" className="tactical-tooltip">
+              <Tooltip direction="bottom" className="tactical-tooltip" pane="labelPane">
                 <div className="px-2 py-0.5 rounded bg-[#0A0E18]/95 border border-white/20 text-white font-mono text-[9px]">
                   {h.name} ({h.type})
                 </div>

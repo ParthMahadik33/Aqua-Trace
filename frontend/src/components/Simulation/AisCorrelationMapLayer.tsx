@@ -218,7 +218,7 @@ export const AisCorrelationMapLayer: React.FC<AisCorrelationMapLayerProps> = ({
 
   return (
     <>
-      {/* 1. RECONSTRUCTED SOURCE CORRIDOR (Restrained Translucent Geographic Region) */}
+      {/* 1. RECONSTRUCTED SOURCE CORRIDOR (Restrained Translucent Geographic Region: corridorPane 430) */}
       <Polygon
         positions={corridorPolygon}
         pathOptions={{
@@ -227,16 +227,17 @@ export const AisCorrelationMapLayer: React.FC<AisCorrelationMapLayerProps> = ({
           dashArray: '4, 6',
           fillColor: '#F59E0B',
           fillOpacity: 0.12,
+          pane: 'corridorPane',
         }}
       >
-        <Tooltip permanent direction="top" className="tactical-tooltip">
+        <Tooltip permanent direction="top" className="tactical-tooltip" pane="labelPane">
           <div className="px-2 py-0.5 rounded bg-[#0A0D14]/90 border border-amber-500/40 text-amber-300 font-mono text-[9px] shadow-lg">
             SOURCE CORRIDOR // 11:45–13:20 UTC
           </div>
         </Tooltip>
       </Polygon>
 
-      {/* 2. AIS VESSEL TRACKS & INTERPOLATED POSITIONS */}
+      {/* 2. AIS VESSEL TRACKS & INTERPOLATED POSITIONS (vesselPane 450) */}
       {CASE_0004_AIS_FLEET.map((vessel) => {
         const style = getVesselStyle(vessel);
         const currentPos = getInterpolatedPosition(vessel, hoursAgo);
@@ -252,6 +253,7 @@ export const AisCorrelationMapLayer: React.FC<AisCorrelationMapLayerProps> = ({
                 weight: style.weight,
                 opacity: style.opacity,
                 dashArray: style.isDimmed ? '3, 6' : undefined,
+                pane: 'vesselPane',
               }}
             />
 
@@ -264,6 +266,7 @@ export const AisCorrelationMapLayer: React.FC<AisCorrelationMapLayerProps> = ({
                 fillColor: style.color,
                 fillOpacity: style.isDimmed ? 0.2 : 0.9,
                 weight: style.isDimmed ? 1 : 2,
+                pane: 'vesselPane',
               }}
               eventHandlers={{
                 click: () => {
