@@ -9,11 +9,8 @@ import {
   ShieldCheck,
   FileText,
   AlertTriangle,
-  Download,
   Stamp,
   GitCompare,
-  Activity,
-  CheckCircle2,
 } from 'lucide-react';
 import {
   SarMetadata,
@@ -42,10 +39,10 @@ export const IncidentReportModal: React.FC<IncidentReportModalProps> = ({
   onClose,
   report,
   sarMetadata,
-  metocean,
+  metocean: _metocean,
   sourceRecon,
   primarySuspect,
-  impact,
+  impact: _impact,
   counterfactualResult,
 }) => {
   const [copied, setCopied] = React.useState(false);
@@ -63,6 +60,14 @@ export const IncidentReportModal: React.FC<IncidentReportModalProps> = ({
   const executiveSummaryText = primarySuspect.name === 'MT NORDIC POLARIS' && !counterfactualResult
     ? report.executiveSummary
     : `On ${sarMetadata.acquisitionTimestamp}, Copernicus ${sarMetadata.platform} SAR satellite acquisition identified a suspected operational hydrocarbon release spanning ${sarMetadata.slickAreaKm2} km² (${sarMetadata.pixelCount.toLocaleString()} pixels) in the active maritime sector. Forensic reverse Lagrangian drift reconstruction established an estimated release envelope prior to acquisition. Spatio-temporal AIS correlation and kinematic anomaly evaluation screened corridor traffic and evaluated vessel of interest ${primarySuspect.name} (IMO ${primarySuspect.imo || 'N/A'}, Flag: ${primarySuspect.flag}) with an attribution score of ${primarySuspect.attributionScore}%. Counterfactual release simulation yielded a ${cfVerdict} hypothesis with ${cfDice} spatial overlap consistency.`;
+
+  const hypothesisStatus =
+    cfVerdict ||
+    (primarySuspect.attributionScore >= 80
+      ? 'SUPPORTED'
+      : primarySuspect.attributionScore >= 50
+        ? 'WEAK'
+        : 'INCONCLUSIVE');
 
   const handleCopy = () => {
     const text = `
@@ -116,33 +121,36 @@ INVESTIGATIVE STANDARD MANDATORY NOTICE:
   };
 
   return (
-    <div className="fixed inset-0 z-[900] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 select-text animate-in fade-in duration-150">
-      <div className="relative w-full max-w-4xl max-h-[90vh] bg-surface border border-border rounded-lg flex flex-col shadow-xl overflow-hidden font-sans text-foreground transition-colors">
-        {/* Modal Top Bar */}
-        <div className="px-6 py-3.5 bg-panel border-b border-border flex items-center justify-between font-mono">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded bg-sky-600/15 text-sky-700 dark:text-sky-300 border border-sky-500/30">
+    <div className="incident-dossier-root">
+      <div className="incident-dossier-backdrop" aria-hidden="true" />
+
+      <div
+        className="incident-dossier"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="incident-dossier-title"
+      >
+        <div className="incident-dossier-toolbar">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="incident-dossier-icon">
               <ShieldCheck className="w-4 h-4" />
             </div>
-            <div>
-              <div className="text-xs font-bold text-foreground tracking-wide">
-                OFFICIAL INCIDENT INVESTIGATION DOSSIER
+            <div className="min-w-0">
+              <div id="incident-dossier-title" className="incident-dossier-title">
+                Official Incident Investigation Dossier
               </div>
-              <div className="text-[10px] text-muted-foreground">
-                MARPOL ANNEX I FORENSIC ATTRIBUTION // CASE 0004
+              <div className="incident-dossier-subtitle">
+                MARITIME INVESTIGATION &amp; ATTRIBUTION BUREAU
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleCopy}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-surface hover:bg-panel border border-border text-xs text-foreground transition-colors cursor-pointer"
-            >
+          <div className="incident-dossier-actions">
+            <button type="button" onClick={handleCopy} className="incident-dossier-btn">
               {copied ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">COPIED</span>
+                  <Check className="w-3.5 h-3.5 incident-dossier-copied" />
+                  <span className="incident-dossier-copied">COPIED</span>
                 </>
               ) : (
                 <>
@@ -152,242 +160,271 @@ INVESTIGATIVE STANDARD MANDATORY NOTICE:
               )}
             </button>
 
-            <button
-              onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-sky-600 hover:bg-sky-500 text-white text-xs transition-colors cursor-pointer font-bold shadow-sm"
-            >
+            <button type="button" onClick={handlePrint} className="incident-dossier-btn incident-dossier-btn-primary">
               <Printer className="w-3.5 h-3.5" />
               <span>PRINT / PDF</span>
             </button>
 
             <button
+              type="button"
               onClick={onClose}
-              className="p-1.5 rounded bg-surface hover:bg-panel text-muted-foreground hover:text-foreground border border-border transition-colors cursor-pointer"
+              className="incident-dossier-btn incident-dossier-btn-icon"
+              aria-label="Close investigation dossier"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Scrollable Dossier Body */}
-        <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 custom-scrollbar text-xs leading-relaxed print:text-black print:bg-white bg-surface">
-          {/* Official Dossier Header */}
-          <div className="border-b border-border pb-5 font-mono">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="incident-dossier-body custom-scrollbar" tabIndex={0}>
+          <div className="incident-dossier-header">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
               <div>
-                <div className="text-sm font-bold text-foreground tracking-wider uppercase">
-                  MARITIME INVESTIGATION & ATTRIBUTION BUREAU
+                <div className="incident-dossier-bureau">
+                  Maritime Investigation &amp; Attribution Bureau
                 </div>
-                <div className="text-[11px] text-muted-foreground">
+                <div className="incident-dossier-subtitle" style={{ marginTop: 4 }}>
                   AquaTrace Satellite Radar Surveillance &amp; Attribution Workstation
                 </div>
               </div>
 
-              <div className="text-left sm:text-right text-[10px] text-muted-foreground">
-                <div>Case Ref: <strong className="text-foreground">{report.incidentRef}</strong></div>
-                <div>Issued: <strong className="text-foreground">{report.generatedDate}</strong></div>
-                <div className="text-sky-700 dark:text-sky-400 font-bold">STATUS: INVESTIGATION COMPLETE (ANALYST REVIEW REQUIRED)</div>
+              <div className="text-left sm:text-right space-y-1">
+                <div>
+                  <span className="incident-dossier-meta-label">Case Reference </span>
+                  <span className="incident-dossier-meta-value">{report.incidentRef}</span>
+                </div>
+                <div>
+                  <span className="incident-dossier-meta-label">Issued </span>
+                  <span className="incident-dossier-meta-value">{report.generatedDate}</span>
+                </div>
+                <div className="incident-dossier-status">
+                  Status: Investigation Complete (Analyst Review Required)
+                </div>
               </div>
             </div>
 
-            {/* Cryptographic Evidence Hash */}
-            <div className="mt-3.5 p-2.5 rounded bg-panel/60 border border-border text-[10px] text-muted-foreground flex items-center justify-between break-all">
-              <span>SHA-256: {report.cryptographicEvidenceHash}</span>
-              <span className="ml-2 text-emerald-700 dark:text-emerald-400 font-bold whitespace-nowrap">
-                PROVENANCE VERIFIED
+            <div className="incident-dossier-hash">
+              <span>
+                SHA-256:{' '}
+                <code>{report.cryptographicEvidenceHash}</code>
+              </span>
+              <span className="incident-dossier-badge incident-dossier-badge-verified">
+                Verified
               </span>
             </div>
           </div>
 
-          {/* Section 1: Executive Summary */}
-          <div className="space-y-2">
-            <h3 className="font-mono text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
-              <FileText className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
-              <span>1. Executive Summary of Incident</span>
+          <section className="incident-dossier-section">
+            <h3 className="incident-dossier-section-heading">
+              <FileText className="w-4 h-4 incident-dossier-section-icon" />
+              <span className="incident-dossier-section-num">01</span>
+              <span>Executive Summary of Incident</span>
             </h3>
-            <p className="text-foreground text-justify bg-panel/40 p-4 rounded border border-border leading-relaxed font-sans">
-              {executiveSummaryText}
-            </p>
-          </div>
+            <div className="incident-dossier-summary">
+              <p className="incident-dossier-prose">{executiveSummaryText}</p>
+              <div className="incident-dossier-callout">
+                <div>
+                  <div className="incident-dossier-callout-kicker">Investigation Status</div>
+                  <div className="incident-dossier-callout-value">Analyst Review Required</div>
+                </div>
+                <div>
+                  <div className="incident-dossier-callout-kicker">Hypothesis Status</div>
+                  <div className="incident-dossier-callout-value">{hypothesisStatus}</div>
+                </div>
+              </div>
+            </div>
+          </section>
 
-          {/* Section 2: Evidentiary Target & Vessel of Interest Particulars */}
-          <div className="space-y-2">
-            <h3 className="font-mono text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
-              <AlertTriangle className="w-3.5 h-3.5" />
-              <span>2. Vessel of Interest Particulars &amp; Attribution Hypothesis</span>
+          <section className="incident-dossier-section">
+            <h3 className="incident-dossier-section-heading">
+              <AlertTriangle className="w-4 h-4 incident-dossier-section-icon" />
+              <span className="incident-dossier-section-num">02</span>
+              <span>Vessel of Interest Particulars &amp; Attribution Hypothesis</span>
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono">
-              <div className="p-3.5 rounded bg-panel/60 border border-border space-y-1.5">
-                <div className="text-sm font-bold text-foreground">{primarySuspect.name}</div>
-                <div className="text-muted-foreground text-[11px]">
-                  IMO Number: <strong className="text-foreground">{primarySuspect.imo}</strong>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="incident-dossier-card">
+                <div className="incident-dossier-card-title">{primarySuspect.name}</div>
+                <div className="incident-dossier-field">
+                  IMO Number: <strong>{primarySuspect.imo}</strong>
                 </div>
-                <div className="text-muted-foreground text-[11px]">
-                  MMSI Telemetry: <strong className="text-foreground">{primarySuspect.mmsi}</strong>
+                <div className="incident-dossier-field">
+                  MMSI Telemetry: <strong>{primarySuspect.mmsi}</strong>
                 </div>
-                <div className="text-muted-foreground text-[11px]">
-                  Flag State: <strong className="text-foreground">{primarySuspect.flag}</strong>
+                <div className="incident-dossier-field">
+                  Flag State: <strong>{primarySuspect.flag}</strong>
                 </div>
-                <div className="text-muted-foreground text-[11px]">
-                  Vessel Type: <strong className="text-foreground">{primarySuspect.vesselType}</strong>
+                <div className="incident-dossier-field">
+                  Vessel Type: <strong>{primarySuspect.vesselType}</strong>
                 </div>
               </div>
 
-              <div className="p-3.5 rounded bg-sky-500/10 border border-sky-500/30 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-sky-700 dark:text-sky-300 font-bold uppercase text-[11px]">ATTRIBUTION CONSISTENCY</span>
-                  <span className="text-base font-bold text-sky-700 dark:text-sky-300">
-                    {primarySuspect.attributionScore}%
+              <div className="incident-dossier-attribution">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="incident-dossier-attr-heading">Attribution Consistency</span>
+                  <span className="incident-dossier-attr-score">
+                    {primarySuspect.attributionScore} / 100
                   </span>
                 </div>
-                <div className="text-muted-foreground text-[11px]">
-                  Closest Approach: <strong className="text-foreground">{primarySuspect.closestApproachDistanceNm} nm</strong> at {primarySuspect.closestApproachTimeUtc.slice(11, 16)} UTC
+                <div className="incident-dossier-field" style={{ marginTop: 10 }}>
+                  Closest Approach:{' '}
+                  <strong>{primarySuspect.closestApproachDistanceNm} nm</strong>
+                  {' at '}
+                  <strong>{primarySuspect.closestApproachTimeUtc.slice(11, 16)} UTC</strong>
                 </div>
-                <div className="text-muted-foreground text-[11px]">
-                  Course Alignment: <strong className="text-foreground">{primarySuspect.courseAtClosestApproachDeg}°</strong> vs Slick Axis 052°
+                <div className="incident-dossier-field">
+                  Course Alignment:{' '}
+                  <strong>{primarySuspect.courseAtClosestApproachDeg}°</strong> vs Slick Axis 052°
                 </div>
-                <div className="text-muted-foreground text-[11px]">
-                  Speed Dip Anomaly: <strong className="text-amber-800 dark:text-amber-400">-{primarySuspect.speedAnomalyDipKn} knots</strong>
+                <div className="incident-dossier-field">
+                  Speed Dip Anomaly:{' '}
+                  <strong className="incident-dossier-warn-text">
+                    -{primarySuspect.speedAnomalyDipKn} knots
+                  </strong>
                 </div>
-                <div className="text-[10px] text-muted-foreground">
-                  Status: INVESTIGATIVE HYPOTHESIS // ANALYST REVIEW REQUIRED
+                <div className="incident-dossier-field" style={{ marginTop: 8 }}>
+                  Hypothesis Status: <strong>{hypothesisStatus}</strong>
                 </div>
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* Section 3: Satellite Radar Observation Data */}
-          <div className="space-y-2 font-mono">
-            <h3 className="font-mono text-xs font-bold text-foreground uppercase tracking-wider">
-              3. Copernicus Sentinel-1B SAR Acquisition Telemetry
+          <section className="incident-dossier-section">
+            <h3 className="incident-dossier-section-heading">
+              <span className="incident-dossier-section-num">03</span>
+              <span>Sentinel-1 SAR Acquisition Telemetry</span>
             </h3>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
-              <div className="p-2.5 rounded bg-panel/60 border border-border">
-                <div className="text-muted-foreground text-[10px]">PLATFORM</div>
-                <div className="font-bold text-foreground">{sarMetadata.platform}</div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="incident-dossier-metric">
+                <div className="incident-dossier-metric-label">Platform</div>
+                <div className="incident-dossier-metric-value">{sarMetadata.platform}</div>
               </div>
-              <div className="p-2.5 rounded bg-panel/60 border border-border">
-                <div className="text-muted-foreground text-[10px]">ORBIT / PASS</div>
-                <div className="font-bold text-foreground">#{sarMetadata.orbitNumber} ({sarMetadata.passDirection})</div>
+              <div className="incident-dossier-metric">
+                <div className="incident-dossier-metric-label">Orbit / Pass</div>
+                <div className="incident-dossier-metric-value">
+                  #{sarMetadata.orbitNumber} ({sarMetadata.passDirection})
+                </div>
               </div>
-              <div className="p-2.5 rounded bg-panel/60 border border-border">
-                <div className="text-muted-foreground text-[10px]">ACQUISITION TIME</div>
-                <div className="font-bold text-foreground">{sarMetadata.acquisitionTimestamp}</div>
+              <div className="incident-dossier-metric">
+                <div className="incident-dossier-metric-label">Acquisition Time</div>
+                <div className="incident-dossier-metric-value">{sarMetadata.acquisitionTimestamp}</div>
               </div>
-              <div className="p-2.5 rounded bg-panel/60 border border-border">
-                <div className="text-muted-foreground text-[10px]">SURFACE SLICK AREA</div>
-                <div className="font-bold text-sky-700 dark:text-sky-300">{sarMetadata.slickAreaKm2} km² ({sarMetadata.pixelCount} px)</div>
+              <div className="incident-dossier-metric">
+                <div className="incident-dossier-metric-label">Surface Slick Area</div>
+                <div className="incident-dossier-metric-value incident-dossier-accent">
+                  {sarMetadata.slickAreaKm2} km² ({sarMetadata.pixelCount} px)
+                </div>
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* Section 4: Counterfactual Source Hypothesis Test Exhibit */}
-          <div className="space-y-2 font-mono">
-            <h3 className="font-mono text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
-              <GitCompare className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
-              <span>4. Counterfactual Source Hypothesis Test Exhibit</span>
+          <section className="incident-dossier-section">
+            <h3 className="incident-dossier-section-heading">
+              <GitCompare className="w-4 h-4 incident-dossier-section-icon" />
+              <span className="incident-dossier-section-num">04</span>
+              <span>Counterfactual Source Hypothesis Test Exhibit</span>
             </h3>
 
-            <div className="p-4 rounded bg-panel/60 border border-border space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="text-foreground text-xs">
-                  <strong>Hypothesis Question:</strong> &quot;If {counterfactualResult?.candidateName || primarySuspect?.name || 'MT NORDIC POLARIS'} were the source, could a plausible release along its trajectory produce the observed slick?&quot;
-                </div>
-                <span className="px-2 py-0.5 rounded bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 text-xs font-bold uppercase">
-                  VERDICT: {counterfactualResult?.verdict || 'INCONCLUSIVE'}
+            <div className="incident-dossier-card space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                <p className="incident-dossier-prose" style={{ textAlign: 'left' }}>
+                  <strong>Hypothesis Question:</strong>{' '}
+                  &quot;If {counterfactualResult?.candidateName || primarySuspect?.name || 'MT NORDIC POLARIS'} were the source, could a plausible release along its trajectory produce the observed slick?&quot;
+                </p>
+                <span className="incident-dossier-badge incident-dossier-badge-warning">
+                  Verdict: {counterfactualResult?.verdict || 'INCONCLUSIVE'}
                 </span>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 text-[11px] pt-1">
-                <div className="p-2 rounded bg-surface border border-border">
-                  <div className="text-muted-foreground text-[10px]">Centroid Offset</div>
-                  <div className="text-sm font-bold text-foreground">
-                    8.72 NM
-                  </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div className="incident-dossier-metric">
+                  <div className="incident-dossier-metric-label">Centroid Offset</div>
+                  <div className="incident-dossier-metric-value">8.72 NM</div>
                 </div>
-                <div className="p-2 rounded bg-surface border border-border">
-                  <div className="text-muted-foreground text-[10px]">Orientation Difference</div>
-                  <div className="text-sm font-bold text-foreground">
-                    15.4°
-                  </div>
+                <div className="incident-dossier-metric">
+                  <div className="incident-dossier-metric-label">Orientation Difference</div>
+                  <div className="incident-dossier-metric-value">15.4°</div>
                 </div>
-                <div className="p-2 rounded bg-surface border border-border">
-                  <div className="text-muted-foreground text-[10px]">Volume Rate Consistency</div>
-                  <div className="text-sm font-bold text-foreground">
-                    180 m³/h (Feasible)
-                  </div>
+                <div className="incident-dossier-metric">
+                  <div className="incident-dossier-metric-label">Volume Rate Consistency</div>
+                  <div className="incident-dossier-metric-value">180 m³/h (Feasible)</div>
                 </div>
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* Section 5: International Conventions & Legal Statutes */}
-          <div className="space-y-2">
-            <h3 className="font-mono text-xs font-bold text-foreground uppercase tracking-wider">
-              5. Relevant International Conventions &amp; Legal Framework
+          <section className="incident-dossier-section">
+            <h3 className="incident-dossier-section-heading">
+              <span className="incident-dossier-section-num">05</span>
+              <span>Relevant International Conventions &amp; Legal Framework</span>
             </h3>
-            <div className="p-3.5 rounded bg-panel/60 border border-border space-y-2 font-mono text-[11px]">
+            <div className="incident-dossier-card space-y-2">
               {report.legalViolations.map((v, i) => (
-                <div key={i} className="flex items-start gap-2 text-foreground">
-                  <span className="text-muted-foreground font-bold">&bull;</span>
+                <div key={i} className="flex items-start gap-2" style={{ fontSize: 14, lineHeight: 1.55 }}>
+                  <span aria-hidden="true">&bull;</span>
                   <span>{v}</span>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
 
-          {/* Section 6: Chain of Custody Verification */}
-          <div className="space-y-2 font-mono">
-            <h3 className="font-mono text-xs font-bold text-foreground uppercase tracking-wider">
-              6. Evidentiary Chain-of-Custody Audit Log
+          <section className="incident-dossier-section">
+            <h3 className="incident-dossier-section-heading">
+              <span className="incident-dossier-section-num">06</span>
+              <span>Evidentiary Chain-of-Custody Audit Log</span>
             </h3>
-            <table className="w-full text-left text-[11px] border-collapse bg-panel/40 rounded border border-border overflow-hidden">
+            <table className="incident-dossier-table">
               <thead>
-                <tr className="border-b border-border text-muted-foreground bg-panel/80">
-                  <th className="p-2.5">Investigation Step</th>
-                  <th className="p-2.5">Data Source / Engine</th>
-                  <th className="p-2.5">Timestamp (UTC)</th>
-                  <th className="p-2.5 text-right">Integrity</th>
+                <tr>
+                  <th>Investigation Step</th>
+                  <th>Data Source / Engine</th>
+                  <th>Timestamp (UTC)</th>
+                  <th style={{ textAlign: 'right' }}>Integrity</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/60 text-foreground">
+              <tbody>
                 {report.chainOfCustody.map((c, i) => (
                   <tr key={i}>
-                    <td className="p-2.5 font-bold text-foreground">{c.step}</td>
-                    <td className="p-2.5 text-muted-foreground">{c.source}</td>
-                    <td className="p-2.5 text-muted-foreground">{c.timestamp}</td>
-                    <td className="p-2.5 text-right text-emerald-700 dark:text-emerald-400 font-bold">VERIFIED</td>
+                    <td>{c.step}</td>
+                    <td className="meta">{c.source}</td>
+                    <td className="meta">{c.timestamp}</td>
+                    <td style={{ textAlign: 'right' }}>
+                      <span className="incident-dossier-badge incident-dossier-badge-verified">
+                        Verified
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
+          </section>
 
-          {/* MANDATORY CLOSING STATEMENT & LEGAL DISCLAIMER */}
-          <div className="p-4 rounded bg-amber-500/10 border border-amber-500/30 space-y-2 font-mono">
-            <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 text-xs font-bold uppercase tracking-wider">
+          <div className="incident-dossier-warning">
+            <div className="incident-dossier-warning-title">
               <AlertTriangle className="w-4 h-4 flex-shrink-0" />
               <span>Mandatory Investigative Hypothesis Declaration</span>
             </div>
-            <p className="text-foreground text-xs font-bold leading-relaxed">
+            <p className="incident-dossier-prose" style={{ marginTop: 8, fontWeight: 700, textAlign: 'left' }}>
               &quot;Attribution consistency is an investigative hypothesis and requires analyst verification.&quot;
             </p>
-            <p className="text-[10px] text-muted-foreground">
+            <p className="incident-dossier-field" style={{ marginTop: 8 }}>
               The findings compiled herein are derived from automated SAR radiometry, Lagrangian hydrodynamics, and AIS spatio-temporal correlation. They constitute analytical leads for maritime authority inspection.
             </p>
           </div>
 
-          {/* Sign-off Authority Block */}
-          <div className="border-t border-border pt-5 flex flex-col sm:flex-row items-start sm:items-center justify-between font-mono text-[11px] text-muted-foreground">
+          <div className="incident-dossier-signoff">
             <div>
-              <div>Reporting Officer: <strong className="text-foreground">{report.reportingOfficer}</strong></div>
-              <div>Lead Investigator: <strong className="text-foreground">{report.leadInvestigator}</strong></div>
+              <div>
+                Reporting Officer: <strong className="incident-dossier-tech">{report.reportingOfficer}</strong>
+              </div>
+              <div>
+                Lead Investigator: <strong className="incident-dossier-tech">{report.leadInvestigator}</strong>
+              </div>
             </div>
-            <div className="mt-4 sm:mt-0 flex items-center gap-2 text-foreground font-semibold">
-              <Stamp className="w-4 h-4 text-sky-600 dark:text-sky-400" />
-              <span>NATIONAL MARITIME OPERATIONS AUTHORITY</span>
+            <div className="flex items-center gap-2" style={{ fontWeight: 600 }}>
+              <Stamp className="w-4 h-4 incident-dossier-section-icon" />
+              <span>National Maritime Operations Authority</span>
             </div>
           </div>
         </div>
