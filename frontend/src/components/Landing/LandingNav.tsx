@@ -70,6 +70,16 @@ export const LandingNav: React.FC = () => {
           <span>LIVE OPS</span>
         </Link>
 
+        {/* Counterfactual Workstation */}
+        <Link
+          href="/counterfactual"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition-colors font-medium tracking-wider text-[11px]"
+          title="Open Focused Counterfactual Workstation"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+          <span>COUNTERFACTUAL</span>
+        </Link>
+
         {/* Primary CTA: START INVESTIGATION */}
         <Link
           href="/simulation"

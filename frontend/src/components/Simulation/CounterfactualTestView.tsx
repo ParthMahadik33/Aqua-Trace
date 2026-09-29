@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import {
   Play,
   RotateCcw,
@@ -9,6 +10,8 @@ import {
   GitCompare,
   Activity,
   Layers,
+  ArrowRight,
+  Compass,
 } from 'lucide-react';
 import { CounterfactualTestResult } from '@/types/simulation';
 
@@ -16,24 +19,51 @@ interface CounterfactualTestViewProps {
   testResult: CounterfactualTestResult;
 }
 
-export const CounterfactualTestView: React.FC<CounterfactualTestViewProps> = ({ testResult }) => {
+export const CounterfactualTestView: React.FC<CounterfactualTestViewProps> = ({ testResult: initialResult }) => {
+  const [testResult, setTestResult] = useState<CounterfactualTestResult>(initialResult);
   const [isSimulating, setIsSimulating] = useState(false);
-  const [simulationProgress, setSimulationProgress] = useState(100);
+  const [simulationStatus, setSimulationStatus] = useState<string>('READY');
 
-  const handleRunSimulation = () => {
+  const handleRunSimulation = async () => {
     setIsSimulating(true);
-    setSimulationProgress(0);
+    setSimulationStatus('RUNNING BACKEND LAGRANGIAN SIMULATION...');
 
-    const interval = setInterval(() => {
-      setSimulationProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsSimulating(false);
-          return 100;
-        }
-        return prev + 20;
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+      const res = await fetch(`${backendUrl}/api/simulation/counterfactual`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          candidate: {
+            mmsi: testResult.candidateMmsi || '244710000',
+            name: testResult.candidateName || 'MT NORDIC POLARIS',
+            lat: testResult.simulatedReleaseCoords?.lat || 54.150,
+            lon: testResult.simulatedReleaseCoords?.lon || 7.280,
+            sog: 13.5,
+            cog: 50.0,
+          },
+          observed_slick: {
+            centroid: { lat: 54.180, lon: 7.320 },
+            areaKm2: testResult.observedSlickStats?.areaKm2 || 4.41,
+            axisHeadingDeg: testResult.observedSlickStats?.axisHeadingDeg || 50.0,
+          },
+          duration_hours: 0.25,
+          environment_source: 'REAL',
+        }),
       });
-    }, 150);
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.testResult) {
+          setTestResult(data.testResult);
+        }
+      }
+    } catch (err) {
+      console.warn('Backend execution error:', err);
+    } finally {
+      setIsSimulating(false);
+      setSimulationStatus('COMPLETED');
+    }
   };
 
   return (
@@ -61,6 +91,26 @@ export const CounterfactualTestView: React.FC<CounterfactualTestViewProps> = ({ 
           </p>
         </div>
 
+        {/* Dedicated Counterfactual Workstation Navigation CTA */}
+        <div className="p-3 rounded-lg bg-cyan-950/30 border border-cyan-500/40 flex items-center justify-between">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-1.5 text-cyan-300 font-bold text-xs">
+              <Compass className="w-3.5 h-3.5" />
+              <span>Dedicated Counterfactual Workstation</span>
+            </div>
+            <div className="text-[10px] text-zinc-400 font-sans">
+              Explore Ennore 2017 benchmark, MapLibre GL, compare wipe, and time scrubber.
+            </div>
+          </div>
+          <Link
+            href="/counterfactual"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-[11px] font-bold transition-all shadow-sm"
+          >
+            <span>OPEN WORKSTATION</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
         {/* Rerun Simulation Button & Progress */}
         <div className="pt-1 flex items-center justify-between">
           <button
@@ -71,27 +121,24 @@ export const CounterfactualTestView: React.FC<CounterfactualTestViewProps> = ({ 
             {isSimulating ? (
               <>
                 <RotateCcw className="w-3.5 h-3.5 animate-spin" />
-                <span>Simulating Plume Dispersion ({simulationProgress}%)...</span>
+                <span>Computing Backend Lagrangian Simulation...</span>
               </>
             ) : (
               <>
                 <Play className="w-3.5 h-3.5 fill-emerald-400" />
-                <span>RUN SOURCE HYPOTHESIS TEST</span>
+                <span>RECOMPUTE HYPOTHESIS TEST</span>
               </>
             )}
           </button>
 
           <span className="text-[10px] text-zinc-500">
-            Model: Gaussian-Lagrangian Kinematics
+            Model: Eulerian-Lagrangian Particle Advection
           </span>
         </div>
 
         {isSimulating && (
           <div className="w-full bg-zinc-800 h-1 rounded-full overflow-hidden">
-            <div
-              className="bg-emerald-400 h-full transition-all duration-150"
-              style={{ width: `${simulationProgress}%` }}
-            />
+            <div className="bg-cyan-400 h-full w-2/3 animate-pulse" />
           </div>
         )}
       </div>

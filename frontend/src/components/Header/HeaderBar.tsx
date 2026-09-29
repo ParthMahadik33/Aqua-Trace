@@ -187,6 +187,17 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
               CASE 0004
             </span>
           </Link>
+          <Link
+            href="/counterfactual"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-zinc-400 hover:text-cyan-300 hover:bg-cyan-500/10 transition-colors font-medium tracking-wider text-[11px] group"
+            title="Focused Counterfactual Workstation: Ennore 2017 & Scientific Hypothesis Testing"
+          >
+            <div className="w-2 h-2 rounded-full bg-cyan-400/60 group-hover:bg-cyan-400 group-hover:shadow-[0_0_8px_rgba(6,182,212,0.8)] transition-all" />
+            <span>COUNTERFACTUAL</span>
+            <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+              WORKSTATION
+            </span>
+          </Link>
         </nav>
 
         {/* Sector Selector Dropdown */}

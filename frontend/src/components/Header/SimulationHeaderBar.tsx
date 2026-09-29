@@ -169,6 +169,16 @@ export const SimulationHeaderBar: React.FC<SimulationHeaderBarProps> = ({
           <span className="hidden sm:inline">LIVE OPS</span>
           <ArrowUpRight className="w-3.5 h-3.5" />
         </Link>
+
+        {/* Counterfactual Workstation Link */}
+        <Link
+          href="/counterfactual"
+          className="flex items-center gap-1 px-2.5 py-1 rounded bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 transition-colors text-[11px] font-medium"
+          title="Open Dedicated Counterfactual Workstation"
+        >
+          <span className="hidden sm:inline">COUNTERFACTUAL</span>
+          <ArrowUpRight className="w-3.5 h-3.5" />
+        </Link>
       </div>
     </header>
   );
